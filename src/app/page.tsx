@@ -214,14 +214,13 @@ function MainAppContent({ session }: { session: Session | null }) {
               >
                 <Icon size={18} className={isActive ? 'stroke-[2.5]' : 'stroke-[1.8]'} />
               </div>
-              <span className={isActive ? 'text-[#0b1c30]' : 'text-slate-400'}>
+              <span className={`relative inline-block ${isActive ? 'text-[#0b1c30]' : 'text-slate-400'}`}>
                 {tab.label}
+                {/* Subtle active visual indicator dot */}
+                {isActive && (
+                  <div className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-1 h-1 bg-[#0b1c30] rounded-full animate-fade-in" />
+                )}
               </span>
-              
-              {/* Subtle active visual indicator dot */}
-              {isActive && (
-                <div className="absolute -bottom-1.5 w-1 h-1 bg-[#0b1c30] rounded-full animate-fade-in" />
-              )}
             </button>
           );
         })}
