@@ -2,15 +2,80 @@
 
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
-import { Search, Plus, Trash2, SlidersHorizontal, Filter, AlertCircle } from 'lucide-react';
+import { Search, Plus, Trash2, SlidersHorizontal, Filter, AlertCircle, X, ChevronDown, Check } from 'lucide-react';
 import { TransactionType } from '../types';
 import { formatDate, formatMonth, formatCurrency } from '../lib/finance/formatters';
 import { FloatingActionMenu } from './transactions/FloatingActionMenu';
-import { X } from 'lucide-react';
 
 interface TransactionsTabProps {
   onOpenDrawer: (type: TransactionType) => void;
 }
+
+interface CustomFilterSelectProps {
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+}
+
+const CustomFilterSelect: React.FC<CustomFilterSelectProps> = ({ label, value, options, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectedOption = options.find(opt => opt.value === value);
+
+  return (
+    <div className="relative">
+      <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block mb-1">{label}</label>
+      
+      {/* Trigger Button */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-bold text-slate-700 outline-none text-left flex items-center justify-between hover:border-slate-300 transition-colors shadow-ambient min-h-[34px]"
+      >
+        <span className="truncate">{selectedOption ? selectedOption.label : 'All'}</span>
+        <ChevronDown 
+          size={12} 
+          className={`text-slate-400 shrink-0 ml-1 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+        />
+      </button>
+
+      {/* Popover Backdrop click outside */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-30" 
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Custom Menu Options */}
+      {isOpen && (
+        <div className="absolute left-0 right-0 top-[38px] bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 z-40 max-h-48 overflow-y-auto no-scrollbar py-1 animate-fade-in origin-top">
+          {options.map((opt) => {
+            const isSelected = opt.value === value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full px-2.5 py-1.5 text-[10px] font-semibold text-left flex items-center justify-between transition-colors ${
+                  isSelected 
+                    ? 'bg-slate-50 text-[#0b1c30] font-bold' 
+                    : 'text-slate-600 hover:bg-slate-50/70 hover:text-[#0b1c30]'
+                }`}
+              >
+                <span className="truncate">{opt.label}</span>
+                {isSelected && <Check size={12} className="text-[#0b1c30] stroke-[2.5]" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const TransactionsTab: React.FC<TransactionsTabProps> = ({ onOpenDrawer }) => {
   const { transactions, accounts, categories, getCategoryName, getAccountName, deleteTransaction, globalMonth } = useApp();
@@ -74,6 +139,29 @@ export const TransactionsTab: React.FC<TransactionsTabProps> = ({ onOpenDrawer }
     setSearch('');
   };
 
+  // Memoized Selector Options
+  const accountOptions = useMemo(() => {
+    return [
+      { value: 'all', label: 'All Accounts' },
+      ...accounts.map(a => ({ value: a.id, label: a.name }))
+    ];
+  }, [accounts]);
+
+  const categoryOptions = useMemo(() => {
+    return [
+      { value: 'all', label: 'All Categories' },
+      ...categories.filter(c => !c.parentCategoryId).map(c => ({ value: c.id, label: c.name }))
+    ];
+  }, [categories]);
+
+  const typeOptions = useMemo(() => {
+    const types = ['expense', 'income', 'transfer', 'asset_buy', 'asset_sell', 'adjustment'];
+    return [
+      { value: 'all', label: 'All Types' },
+      ...types.map(t => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1).replace('_', ' ') }))
+    ];
+  }, []);
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden relative">
       
@@ -113,49 +201,28 @@ export const TransactionsTab: React.FC<TransactionsTabProps> = ({ onOpenDrawer }
           <div className="p-3 bg-slate-50 rounded-xl space-y-3 border border-slate-100 animate-slide-down">
             <div className="grid grid-cols-3 gap-2">
               {/* Account Selector */}
-              <div>
-                <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Account</label>
-                <select
-                  value={selectedAccount}
-                  onChange={(e) => setSelectedAccount(e.target.value)}
-                  className="w-full p-1.5 bg-white border border-slate-200 rounded-md text-[10px] outline-none"
-                >
-                  <option value="all">All</option>
-                  {accounts.map(a => (
-                    <option key={a.id} value={a.id}>{a.name}</option>
-                  ))}
-                </select>
-              </div>
+              <CustomFilterSelect
+                label="Account"
+                value={selectedAccount}
+                options={accountOptions}
+                onChange={setSelectedAccount}
+              />
 
               {/* Category Selector */}
-              <div>
-                <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Category</label>
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full p-1.5 bg-white border border-slate-200 rounded-md text-[10px] outline-none"
-                >
-                  <option value="all">All</option>
-                  {categories.filter(c => !c.parentCategoryId).map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
+              <CustomFilterSelect
+                label="Category"
+                value={selectedCategory}
+                options={categoryOptions}
+                onChange={setSelectedCategory}
+              />
 
               {/* Type Selector */}
-              <div>
-                <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Type</label>
-                <select
-                  value={selectedType}
-                  onChange={(e) => setSelectedType(e.target.value)}
-                  className="w-full p-1.5 bg-white border border-slate-200 rounded-md text-[10px] outline-none capitalize"
-                >
-                  <option value="all">All</option>
-                  {['expense', 'income', 'transfer', 'asset_buy', 'asset_sell', 'adjustment'].map(t => (
-                    <option key={t} value={t}>{t.replace('_', ' ')}</option>
-                  ))}
-                </select>
-              </div>
+              <CustomFilterSelect
+                label="Type"
+                value={selectedType}
+                options={typeOptions}
+                onChange={setSelectedType}
+              />
             </div>
 
             {/* Clear filters button */}
