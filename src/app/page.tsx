@@ -9,13 +9,20 @@ import { BudgetTab } from '../components/BudgetTab';
 import { AccountsTab } from '../components/AccountsTab';
 import { ReportsTab } from '../components/ReportsTab';
 import { AddTransactionSheet } from '../components/transactions/AddTransactionSheet';
-import { Home, Receipt, PiggyBank, Landmark, BarChart3, User, Calendar, LogOut } from 'lucide-react';
+import { Home, Receipt, PiggyBank, Landmark, BarChart3, User, Calendar, LogOut, Sparkles, Info, HelpCircle } from 'lucide-react';
 import { TransactionType } from '../types';
 import { APP_CONFIG } from '../lib/appConfig';
 import { formatMonth } from '../lib/finance/formatters';
 import { GlobalMonthPickerSheet } from '../components/GlobalMonthPickerSheet';
 import { supabase } from '../lib/supabase/client';
 import { AuthScreen } from '../components/auth/AuthScreen';
+import { 
+  InfoSheet, 
+  ProfileSettingsContent, 
+  WhatsNewContent, 
+  HelpSupportContent, 
+  AboutPockitContent 
+} from '../components/profile/ProfileInfoSheets';
 import { Session } from '@supabase/supabase-js';
 
 const generateMonths = (): string[] => {
@@ -36,6 +43,7 @@ function MainAppContent({ session }: { session: Session | null }) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [activeInfoSheet, setActiveInfoSheet] = useState<'profile' | 'whats_new' | 'help' | 'about' | null>(null);
   const [drawerDefaultType, setDrawerDefaultType] = useState<TransactionType>('expense');
   const [mounted, setMounted] = useState(false);
 
@@ -142,27 +150,52 @@ function MainAppContent({ session }: { session: Session | null }) {
                   </div>
                 </div>
                 <div className="p-2 flex flex-col">
-                  <button disabled className="flex items-center px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-50 rounded-xl transition-colors text-left disabled:opacity-50 group">
-                    <User size={16} className="mr-3 shrink-0" />
+                  <button 
+                    onClick={() => {
+                      setIsProfileMenuOpen(false);
+                      setActiveInfoSheet('profile');
+                    }}
+                    className="flex items-center px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-colors text-left cursor-pointer"
+                  >
+                    <User size={16} className="mr-3 shrink-0 text-slate-400" />
                     <span className="flex-1">Profile Settings</span>
-                    <span className="text-[8px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded font-bold uppercase hidden group-hover:block">Soon</span>
                   </button>
-                  <button disabled className="flex items-center px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-50 rounded-xl transition-colors text-left disabled:opacity-50 group">
-                    <svg className="mr-3 shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    <span className="flex-1">Security & Privacy</span>
-                    <span className="text-[8px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded font-bold uppercase hidden group-hover:block">Soon</span>
+                  <button 
+                    onClick={() => {
+                      setIsProfileMenuOpen(false);
+                      setActiveInfoSheet('whats_new');
+                    }}
+                    className="flex items-center px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-colors text-left cursor-pointer"
+                  >
+                    <Sparkles size={16} className="mr-3 shrink-0 text-slate-400" />
+                    <span className="flex-1">What's New</span>
                   </button>
-                  <button disabled className="flex items-center px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-50 rounded-xl transition-colors text-left disabled:opacity-50 group">
-                    <svg className="mr-3 shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+                  <button 
+                    onClick={() => {
+                      setIsProfileMenuOpen(false);
+                      setActiveInfoSheet('help');
+                    }}
+                    className="flex items-center px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-colors text-left cursor-pointer"
+                  >
+                    <HelpCircle size={16} className="mr-3 shrink-0 text-slate-400" />
                     <span className="flex-1">Help & Support</span>
-                    <span className="text-[8px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded font-bold uppercase hidden group-hover:block">Soon</span>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setIsProfileMenuOpen(false);
+                      setActiveInfoSheet('about');
+                    }}
+                    className="flex items-center px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-colors text-left cursor-pointer"
+                  >
+                    <Info size={16} className="mr-3 shrink-0 text-slate-400" />
+                    <span className="flex-1">About Pockit</span>
                   </button>
                   
                   <div className="h-px bg-slate-100 my-1 mx-2" />
                   
                   <button 
                     onClick={() => supabase.auth.signOut()}
-                    className="flex items-center px-3 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 rounded-xl transition-colors text-left"
+                    className="flex items-center px-3 py-2.5 text-sm font-semibold text-rose-500 hover:bg-rose-50 rounded-xl transition-colors text-left cursor-pointer"
                   >
                     <LogOut size={16} className="mr-3 shrink-0" />
                     Logout
@@ -240,6 +273,43 @@ function MainAppContent({ session }: { session: Session | null }) {
         selectedMonth={globalMonth}
         onSelect={(newMonth) => setGlobalMonth(newMonth)}
       />
+
+      {/* Dynamic Profile Info bottom drawers */}
+      <InfoSheet
+        isOpen={activeInfoSheet === 'profile'}
+        onClose={() => setActiveInfoSheet(null)}
+        title="Profile Settings"
+        icon={User}
+      >
+        <ProfileSettingsContent email={userEmail} initials={initials} />
+      </InfoSheet>
+
+      <InfoSheet
+        isOpen={activeInfoSheet === 'whats_new'}
+        onClose={() => setActiveInfoSheet(null)}
+        title="What's New"
+        icon={Sparkles}
+      >
+        <WhatsNewContent />
+      </InfoSheet>
+
+      <InfoSheet
+        isOpen={activeInfoSheet === 'help'}
+        onClose={() => setActiveInfoSheet(null)}
+        title="Help & Support"
+        icon={HelpCircle}
+      >
+        <HelpSupportContent />
+      </InfoSheet>
+
+      <InfoSheet
+        isOpen={activeInfoSheet === 'about'}
+        onClose={() => setActiveInfoSheet(null)}
+        title="About Pockit"
+        icon={Info}
+      >
+        <AboutPockitContent />
+      </InfoSheet>
     </div>
   );
 }
