@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase/client';
 import { AuthInput } from './AuthInput';
 import { AuthMessage } from './AuthMessage';
-import { Mail, Lock, Fingerprint, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight } from 'lucide-react';
 
 export function LoginForm({ onToggleMode }: { onToggleMode: () => void }) {
   const [email, setEmail] = useState('');
@@ -58,23 +58,6 @@ export function LoginForm({ onToggleMode }: { onToggleMode: () => void }) {
           {!isLoading && <ArrowRight size={18} />}
         </button>
       </div>
-
-      {/* Divider */}
-      <div className="relative py-2 flex items-center">
-        <div className="flex-grow border-t border-[#e2e8f0]"></div>
-        <span className="flex-shrink-0 mx-4 text-[#76777d] text-[11px] uppercase tracking-wider font-semibold">Or</span>
-        <div className="flex-grow border-t border-[#e2e8f0]"></div>
-      </div>
-
-      {/* Biometric Dummy */}
-      <button 
-        type="button" 
-        disabled
-        className="w-full h-[48px] bg-[#f8f9ff] text-[#0b1c30] rounded-[16px] font-semibold text-[14px] border border-[#e2e8f0] flex items-center justify-center space-x-2 opacity-60 cursor-not-allowed"
-      >
-        <Fingerprint size={18} className="text-[#45464d]" />
-        <span>Use Biometric Sign-in</span>
-      </button>
 
       <div className="text-center pt-2">
         <p className="text-[14px] text-[#45464d]">

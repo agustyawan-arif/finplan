@@ -1,6 +1,6 @@
-# Finplan — Production-Ready Money Manager
+# Pockit — Production-Ready Money Manager
 
-Finplan is a premium, mobile-first personal finance and money management web application optimized for modern viewports. Built using React, Next.js (App Router with Turbopack), TailwindCSS v4, Lucide icons, and backed by Supabase with robust Row-Level Security (RLS).
+Pockit is a premium, mobile-first personal finance and money management web application optimized for modern viewports. Built using React, Next.js (App Router with Turbopack), TailwindCSS v4, Lucide icons, and backed by Supabase with robust Row-Level Security (RLS).
 
 ---
 
