@@ -195,7 +195,7 @@ function MainAppContent({ session }: { session: Session | null }) {
       {renderTabContent()}
 
       {/* iOS styled Bottom Tab Bar Navigation */}
-      <nav className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 flex items-center justify-around px-2 pt-2.5 pb-[calc(env(safe-area-inset-bottom,0px)+8px)] z-30 shadow-ambient-lg select-none">
+      <nav className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 flex items-start justify-around px-2 pt-2.5 pb-[calc(env(safe-area-inset-bottom,0px)+8px)] z-30 shadow-ambient-lg select-none">
         {navTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
