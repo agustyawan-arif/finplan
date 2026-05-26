@@ -250,18 +250,47 @@ export default function HomeView() {
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
   React.useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setIsLoadingAuth(false);
-    });
+    let active = true;
+
+    async function initAuth() {
+      try {
+        // Create a 2.5 second timeout to prevent hanging indefinitely in non-secure HTTP IP contexts
+        const timeoutPromise = new Promise<{ data: { session: null } }>((resolve) =>
+          setTimeout(() => resolve({ data: { session: null } }), 2500)
+        );
+
+        const { data: { session } } = await Promise.race([
+          supabase.auth.getSession(),
+          timeoutPromise
+        ]);
+
+        if (active) {
+          setSession(session);
+        }
+      } catch (err) {
+        console.error('Supabase auth session initialization failed:', err);
+      } finally {
+        if (active) {
+          setIsLoadingAuth(false);
+        }
+      }
+    }
+
+    initAuth();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+      if (active) {
+        setSession(session);
+        setIsLoadingAuth(false);
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   if (isLoadingAuth) {
