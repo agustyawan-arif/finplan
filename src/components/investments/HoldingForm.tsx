@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { FormInput, FormSelect, SubmitButton } from '../transactions/TransactionFormFields';
+import { FormInput, FormTextarea, SubmitButton, FormPickerTrigger } from '../transactions/TransactionFormFields';
+import { GenericSelectorBottomSheet, AccountSelectorBottomSheet } from '../transactions/SelectorBottomSheet';
 import { AssetType, CurrencyCode, HoldingStatus } from '../../types/finance';
 
 interface HoldingFormProps {
@@ -27,6 +28,32 @@ export const HoldingForm: React.FC<HoldingFormProps> = ({ onSuccess, holdingToEd
   const [status, setStatus] = useState<HoldingStatus>(holdingToEdit ? holdingToEdit.status : 'active');
   const [errorMessage, setErrorMessage] = useState('');
 
+  const [isAssetTypeSheetOpen, setIsAssetTypeSheetOpen] = useState(false);
+  const [isCurrencySheetOpen, setIsCurrencySheetOpen] = useState(false);
+  const [isStatusSheetOpen, setIsStatusSheetOpen] = useState(false);
+  const [isAccountSheetOpen, setIsAccountSheetOpen] = useState(false);
+
+  const assetTypeOptions = [
+    { id: 'stock', label: 'Stock Equity' },
+    { id: 'mutual_fund', label: 'Mutual Fund' },
+    { id: 'deposit', label: 'Fixed Deposit' },
+    { id: 'foreign_currency', label: 'Foreign Currency' },
+    { id: 'other', label: 'Other Asset' },
+  ];
+
+  const currencyOptions = [
+    { id: 'IDR', label: 'IDR (Rp)' },
+    { id: 'SGD', label: 'SGD ($)' },
+    { id: 'USD', label: 'USD ($)' },
+  ];
+
+  const statusOptions = [
+    { id: 'active', label: 'Active Holding' },
+    { id: 'sold', label: 'Fully Sold' },
+    { id: 'matured', label: 'Matured (Deposit)' },
+    { id: 'closed', label: 'Closed / Redeemed' },
+  ];
+
   // Setup account default
   useEffect(() => {
     const activeAccs = accounts.filter((a) => a.isActive && (a.type === 'investment' || a.type === 'bank' || a.type === 'deposit'));
@@ -37,11 +64,9 @@ export const HoldingForm: React.FC<HoldingFormProps> = ({ onSuccess, holdingToEd
   }, [accounts, accountId]);
 
   // Sync currency with account selection
-  const handleAccountChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selAccId = e.target.value;
-    setAccountId(selAccId);
-    const acc = accounts.find((a) => a.id === selAccId);
-    if (acc) setCurrency(acc.currency);
+  const handleAccountChange = (acc: any) => {
+    setAccountId(acc.id);
+    setCurrency(acc.currency);
   };
 
   // Sync total currentValue from quantity and currentPrice when stocks/mutual_funds are adjusted
@@ -122,21 +147,18 @@ export const HoldingForm: React.FC<HoldingFormProps> = ({ onSuccess, holdingToEd
         />
 
         <div className="grid grid-cols-2 gap-2">
-          <FormSelect label="Asset Category" value={assetType} onChange={(e) => setAssetType(e.target.value as AssetType)} required>
-            <option value="stock">Stock Equity</option>
-            <option value="mutual_fund">Mutual Fund</option>
-            <option value="deposit">Fixed Deposit</option>
-            <option value="foreign_currency">Foreign Currency</option>
-            <option value="other">Other Asset</option>
-          </FormSelect>
+          <FormPickerTrigger
+            label="Asset Category"
+            valueText={assetTypeOptions.find(o => o.id === assetType)?.label || 'Select...'}
+            onClick={() => setIsAssetTypeSheetOpen(true)}
+          />
 
-          <FormSelect label="Broker / Cash Account" value={accountId} onChange={handleAccountChange} required>
-            {activeAccounts.map((acc) => (
-              <option key={acc.id} value={acc.id}>
-                {acc.name} ({acc.currency})
-              </option>
-            ))}
-          </FormSelect>
+          <FormPickerTrigger
+            label="Broker / Cash Account"
+            valueText={accountId ? (accounts.find(a => a.id === accountId)?.name || 'Select...') : 'Select...'}
+            subtitleText={accountId ? accounts.find(a => a.id === accountId)?.currency : ''}
+            onClick={() => setIsAccountSheetOpen(true)}
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-2">
@@ -147,11 +169,11 @@ export const HoldingForm: React.FC<HoldingFormProps> = ({ onSuccess, holdingToEd
             value={symbol}
             onChange={(e) => setSymbol(e.target.value)}
           />
-          <FormSelect label="Currency" value={currency} onChange={(e) => setCurrency(e.target.value as CurrencyCode)} required>
-            <option value="IDR">IDR (Rp)</option>
-            <option value="SGD">SGD ($)</option>
-            <option value="USD">USD ($)</option>
-          </FormSelect>
+          <FormPickerTrigger
+            label="Currency"
+            valueText={currencyOptions.find(o => o.id === currency)?.label || 'Select...'}
+            onClick={() => setIsCurrencySheetOpen(true)}
+          />
         </div>
 
         <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4.5 space-y-3.5">
@@ -238,16 +260,51 @@ export const HoldingForm: React.FC<HoldingFormProps> = ({ onSuccess, holdingToEd
         )}
 
         <div className="grid grid-cols-2 gap-2">
-          <FormSelect label="Status" value={status} onChange={(e) => setStatus(e.target.value as HoldingStatus)} required>
-            <option value="active">Active Holding</option>
-            <option value="sold">Fully Sold</option>
-            <option value="matured">Matured (Deposit)</option>
-            <option value="closed">Closed / Redeemed</option>
-          </FormSelect>
+          <FormPickerTrigger
+            label="Status"
+            valueText={statusOptions.find(o => o.id === status)?.label || 'Select...'}
+            onClick={() => setIsStatusSheetOpen(true)}
+          />
         </div>
       </div>
 
       <SubmitButton>{holdingToEdit ? 'Save Asset Modifications' : 'Configure New Asset Holding'}</SubmitButton>
+
+      <GenericSelectorBottomSheet
+        isOpen={isAssetTypeSheetOpen}
+        onClose={() => setIsAssetTypeSheetOpen(false)}
+        title="Select Asset Category"
+        options={assetTypeOptions}
+        selectedId={assetType}
+        onSelect={(id) => setAssetType(id as AssetType)}
+      />
+
+      <GenericSelectorBottomSheet
+        isOpen={isCurrencySheetOpen}
+        onClose={() => setIsCurrencySheetOpen(false)}
+        title="Select Currency"
+        options={currencyOptions}
+        selectedId={currency}
+        onSelect={(id) => setCurrency(id as CurrencyCode)}
+      />
+
+      <GenericSelectorBottomSheet
+        isOpen={isStatusSheetOpen}
+        onClose={() => setIsStatusSheetOpen(false)}
+        title="Select Holding Status"
+        options={statusOptions}
+        selectedId={status}
+        onSelect={(id) => setStatus(id as HoldingStatus)}
+      />
+
+      <AccountSelectorBottomSheet
+        isOpen={isAccountSheetOpen}
+        onClose={() => setIsAccountSheetOpen(false)}
+        title="Select Broker / Cash Account"
+        selectedId={accountId}
+        onSelect={handleAccountChange}
+        allowedTypes={['bank', 'investment', 'deposit', 'cash', 'pocket', 'e_wallet']}
+      />
     </form>
   );
 };

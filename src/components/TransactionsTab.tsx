@@ -13,7 +13,7 @@ interface TransactionsTabProps {
 }
 
 export const TransactionsTab: React.FC<TransactionsTabProps> = ({ onOpenDrawer }) => {
-  const { transactions, accounts, categories, getCategoryName, getAccountName, deleteTransaction, globalMonth, setGlobalMonth } = useApp();
+  const { transactions, accounts, categories, getCategoryName, getAccountName, deleteTransaction, globalMonth } = useApp();
 
   const [search, setSearch] = useState('');
   const [selectedAccount, setSelectedAccount] = useState('all');
@@ -22,8 +22,7 @@ export const TransactionsTab: React.FC<TransactionsTabProps> = ({ onOpenDrawer }
   const [showFilters, setShowFilters] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Available unique months
-  const monthsList = ['2026-05', '2026-04', '2026-03'];
+
 
   // Filtered & Searched Transactions
   const filteredTransactions = useMemo(() => {
@@ -94,20 +93,7 @@ export const TransactionsTab: React.FC<TransactionsTabProps> = ({ onOpenDrawer }
         </div>
 
         {/* Filters Quick Row */}
-        <div className="flex items-center justify-between gap-2">
-          {/* Month Selector */}
-          <select
-            value={globalMonth}
-            onChange={(e) => setGlobalMonth(e.target.value)}
-            className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold outline-none"
-          >
-            <option value="all">All Months</option>
-            {monthsList.map((m) => (
-              <option key={m} value={m}>
-                {formatMonth(m)}
-              </option>
-            ))}
-          </select>
+        <div className="flex items-center justify-end gap-2">
 
           {/* Sliders filter button */}
           <button

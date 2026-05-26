@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { FormInput, FormSelect, SubmitButton } from '../transactions/TransactionFormFields';
+import { FormInput, SubmitButton, FormPickerTrigger } from '../transactions/TransactionFormFields';
+import { GenericSelectorBottomSheet } from '../transactions/SelectorBottomSheet';
 import { CurrencyCode } from '../../types/finance';
 
 interface ExchangeRateFormProps {
@@ -13,6 +14,12 @@ export const ExchangeRateForm: React.FC<ExchangeRateFormProps> = ({ onSuccess })
   const [fromCurrency, setFromCurrency] = useState<CurrencyCode>('SGD');
   const [rate, setRate] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [isCurrencySheetOpen, setIsCurrencySheetOpen] = useState(false);
+
+  const sourceCurrencyOptions = [
+    { id: 'SGD', label: 'Singapore Dollar (SGD)' },
+    { id: 'USD', label: 'United States Dollar (USD)' },
+  ];
 
   // Pre-populate rate if already configured in exchangeRates
   useEffect(() => {
@@ -54,15 +61,11 @@ export const ExchangeRateForm: React.FC<ExchangeRateFormProps> = ({ onSuccess })
       )}
 
       <div className="space-y-3.5 text-xs select-none">
-        <FormSelect
+        <FormPickerTrigger
           label="Source Currency"
-          value={fromCurrency}
-          onChange={(e) => setFromCurrency(e.target.value as CurrencyCode)}
-          required
-        >
-          <option value="SGD">Singapore Dollar (SGD)</option>
-          <option value="USD">United States Dollar (USD)</option>
-        </FormSelect>
+          valueText={sourceCurrencyOptions.find(o => o.id === fromCurrency)?.label || 'Select...'}
+          onClick={() => setIsCurrencySheetOpen(true)}
+        />
 
         <FormInput
           label={`Exchange Rate (1 ${fromCurrency} = Rp)`}
@@ -80,6 +83,15 @@ export const ExchangeRateForm: React.FC<ExchangeRateFormProps> = ({ onSuccess })
       </div>
 
       <SubmitButton>Apply Exchange Factor</SubmitButton>
+
+      <GenericSelectorBottomSheet
+        isOpen={isCurrencySheetOpen}
+        onClose={() => setIsCurrencySheetOpen(false)}
+        title="Select Source Currency"
+        options={sourceCurrencyOptions}
+        selectedId={fromCurrency}
+        onSelect={(id) => setFromCurrency(id as CurrencyCode)}
+      />
     </form>
   );
 };

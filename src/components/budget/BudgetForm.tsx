@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { FormInput, FormSelect, FormTextarea, SubmitButton } from '../transactions/TransactionFormFields';
+import { FormInput, FormTextarea, SubmitButton } from '../transactions/TransactionFormFields';
 import { CurrencyCode } from '../../types/finance';
+import { CategorySelectorBottomSheet } from '../transactions/SelectorBottomSheet';
+import { ChevronDown } from 'lucide-react';
 
 interface BudgetFormProps {
   onSuccess: () => void;
@@ -14,10 +16,11 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({
   selectedMonth,
   defaultCategoryId = '',
 }) => {
-  const { categories, budgets, addBudget, updateBudget } = useApp();
+  const { categories, budgets, addBudget, updateBudget, getCategoryName } = useApp();
 
   const [month, setMonth] = useState(selectedMonth);
   const [categoryId, setCategoryId] = useState(defaultCategoryId);
+  const [isCategorySheetOpen, setIsCategorySheetOpen] = useState(false);
   const [plannedAmount, setPlannedAmount] = useState('');
   const [currency] = useState<CurrencyCode>('IDR');
   const [rolloverEnabled, setRolloverEnabled] = useState(false);
@@ -128,18 +131,30 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({
           required
         />
 
-        <FormSelect
-          label="Target Budget Category"
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          required
-        >
-          {parentCategories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </FormSelect>
+        <div>
+          <span className="text-xs font-bold text-slate-800 block mb-1.5 ml-1">Target Budget Category</span>
+          <button
+            type="button"
+            onClick={() => setIsCategorySheetOpen(true)}
+            className="w-full text-left p-3.5 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0f172a] focus:ring-offset-1 transition-all flex items-center justify-between group hover:bg-slate-100"
+          >
+            <span className={categoryId ? 'text-sm font-bold text-[#0b1c30]' : 'text-sm font-semibold text-slate-400'}>
+              {categoryId ? getCategoryName(categoryId) : 'Select a category'}
+            </span>
+            <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center border border-slate-100 group-hover:border-slate-200">
+              <ChevronDown size={14} className="text-slate-500" />
+            </div>
+          </button>
+        </div>
+
+        <CategorySelectorBottomSheet
+          isOpen={isCategorySheetOpen}
+          onClose={() => setIsCategorySheetOpen(false)}
+          title="Select Budget Category"
+          selectedId={categoryId}
+          onSelect={(c) => setCategoryId(c.id)}
+          isBudgetSelector={true}
+        />
 
         <FormInput
           label={`Target Planned Limit (${currency})`}
