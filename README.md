@@ -1,38 +1,107 @@
-# finplan
+# Finplan — Production-Ready Money Manager
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Finplan is a premium, mobile-first personal finance and money management web application optimized for modern viewports. Built using React, Next.js (App Router with Turbopack), TailwindCSS v4, Lucide icons, and backed by Supabase with robust Row-Level Security (RLS).
 
-## Getting Started
+---
 
-First, run the development server:
+## 🛠️ Tech Stack & Architecture
+
+- **Frontend Framework:** Next.js (with React 19)
+- **Styling:** TailwindCSS v4
+- **Database & Auth:** Supabase (PostgreSQL with RLS and user ownership policies)
+- **Icons:** Lucide React
+- **Build Validation:** Strict TypeScript compilation check + optimized ESLint environment configuration for lightning-fast, production-ready static page generation and CI/CD pipelines.
+
+---
+
+## 🔒 Production Security & Data Isolation
+
+1. **Row-Level Security (RLS):** 
+   - All financial tables (`accounts`, `categories`, `budgets`, `investment_holdings`, `transactions`, `asset_valuations`, `exchange_rates`) have PostgreSQL Row-Level Security enabled.
+   - Access policies strictly verify `user_id = auth.uid()` on all operations (`SELECT`, `INSERT`, `UPDATE`, `DELETE`).
+   - The frontend exclusively utilizes the public anon key (`NEXT_PUBLIC_SUPABASE_ANON_KEY`) for secure, client-side queries. User sessions are verified securely via the Supabase Auth listener.
+   - High-privilege keys (`service_role`) are **never** committed or exposed to client-side code.
+
+2. **Clean Mock Data Isolation:**
+   - All mock financial data is isolated under the `src/data` directory and `src/lib/finance/mockDataValidation.ts`.
+   - Production/authenticated database states strictly fetch user data relative to the logged-in user `id`. Real user records are never mixed, seeded, or polluted with developer mock data.
+
+---
+
+## 🔑 Environment Variables Setup
+
+Before running the application, configure your local environment files.
+
+Create a `.env.local` file in the root directory (this file is excluded from git control via `.gitignore`):
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Supabase Production or Development Project Credentials
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-sb-anon-key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+An example template is available at [.env.local.example](file:///Users/arifagustyawan/Documents/projects/finplan/.env.local.example).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🚀 Running Locally
 
-## Learn More
+1. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. **Run Development Server:**
+   ```bash
+   npm run dev
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. **Open local application:**
+   Navigate to [http://localhost:3000](http://localhost:3000) inside your web browser.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 📦 Building & Validating for Production
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+To perform a production-ready sanity check and compile the static deployment assets locally:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Type Check (Strict TypeScript compiler):**
+   ```bash
+   npx tsc --noEmit
+   ```
+
+2. **Lint Validation:**
+   ```bash
+   npm run lint
+   ```
+
+3. **Next.js Optimized Production Build:**
+   ```bash
+   npm run build
+   ```
+
+---
+
+## 💾 Supabase Setup Reminder
+
+To initialize your production database schema:
+
+1. Create a new project in your **Supabase Dashboard**.
+2. Run the migration scripts located in the [supabase/migrations/](file:///Users/arifagustyawan/Documents/projects/finplan/supabase/migrations) directory in order:
+   - `20260526000000_init_schema.sql` (Creates tables, triggers, and configures basic RLS policies)
+   - `20260526090000_grant_permissions.sql` (Grants public and authenticated API roles usage access to tables)
+   - `20260526090500_add_category_columns.sql`
+   - `20260526090600_align_schemas_with_types.sql`
+   - `20260526090800_fix_category_kind_check.sql`
+
+---
+
+## 🌩️ Deploying to Vercel
+
+1. Push your project commits to a **GitHub/GitLab/Bitbucket** repository.
+2. Sign in to [Vercel](https://vercel.com) and create a **New Project**.
+3. Select your repository.
+4. Under **Environment Variables**, add:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+5. Click **Deploy**. Vercel will automatically build the Next.js static files and configure optimized edge routing.
