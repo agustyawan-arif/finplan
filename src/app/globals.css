@@ -1,26 +1,71 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary: #0f172a;
+  --color-primary-container: #131b2e;
+  --color-on-primary-container: #7c839b;
+  
+  --color-secondary: #006c49;
+  --color-secondary-container: #6cf8bb;
+  --color-on-secondary-container: #00714d;
+  
+  --color-tertiary: #f43f5e;
+  --color-tertiary-container: #40000d;
+  --color-on-tertiary-container: #f23d5c;
+  
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  
+  --color-background: #f8f9ff;
+  --color-surface: #f8f9ff;
+  --color-surface-dim: #cbdbf5;
+  --color-surface-bright: #f8f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #eff4ff;
+  --color-surface-container: #e5eeff;
+  --color-surface-container-high: #dce9ff;
+  --color-surface-container-highest: #d3e4fe;
+  --color-inverse-surface: #213145;
+  
+  --color-on-surface: #0b1c30;
+  --color-on-surface-variant: #45464d;
+  --color-inverse-on-surface: #eaf1ff;
+  --color-outline: #76777d;
+  --color-outline-variant: #c6c6cd;
+  
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #f8f9ff;
+  --foreground: #0b1c30;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Hide scrollbars for a sleek mobile feel */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Ambient shadow from DESIGN.md */
+.shadow-ambient {
+  box-shadow: 0px 4px 20px rgba(15, 23, 42, 0.04);
+}
+
+.shadow-ambient-md {
+  box-shadow: 0px 8px 30px rgba(15, 23, 42, 0.06);
+}
+
+.shadow-ambient-lg {
+  box-shadow: 0px 12px 40px rgba(15, 23, 42, 0.08);
 }
