@@ -6,6 +6,7 @@ import { Search, Plus, Trash2, SlidersHorizontal, Filter, AlertCircle, X, Chevro
 import { TransactionType } from '../types';
 import { formatDate, formatMonth, formatCurrency } from '../lib/finance/formatters';
 import { FloatingActionMenu } from './transactions/FloatingActionMenu';
+import { ConfirmActionSheet } from './ui/ConfirmActionSheet';
 
 interface TransactionsTabProps {
   onOpenDrawer: (type: TransactionType) => void;
@@ -86,6 +87,7 @@ export const TransactionsTab: React.FC<TransactionsTabProps> = ({ onOpenDrawer }
   const [selectedType, setSelectedType] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [txToDelete, setTxToDelete] = useState<any | null>(null);
 
 
 
@@ -309,8 +311,8 @@ export const TransactionsTab: React.FC<TransactionsTabProps> = ({ onOpenDrawer }
 
                           {/* Delete Interactive */}
                           <button
-                            onClick={() => deleteTransaction(t.id)}
-                            className="p-1 rounded-md text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition-colors ml-1"
+                            onClick={() => setTxToDelete(t)}
+                            className="p-1 rounded-md text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition-colors ml-1 cursor-pointer"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -349,6 +351,25 @@ export const TransactionsTab: React.FC<TransactionsTabProps> = ({ onOpenDrawer }
         )}
       </button>
 
+      {/* Delete Transaction confirmation sheet */}
+      <ConfirmActionSheet
+        isOpen={!!txToDelete}
+        onClose={() => setTxToDelete(null)}
+        title="Delete transaction?"
+        message={
+          txToDelete && ['asset_buy', 'asset_sell', 'asset_value_update'].includes(txToDelete.type)
+            ? "This transaction affects investment values and net worth. Deleting it may change your reports."
+            : "This will remove the transaction and update your balances, budgets, and reports."
+        }
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={async () => {
+          if (txToDelete) {
+            await deleteTransaction(txToDelete.id);
+            setTxToDelete(null);
+          }
+        }}
+      />
     </div>
   );
 };

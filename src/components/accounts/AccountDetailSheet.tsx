@@ -9,6 +9,7 @@ import { HoldingCard } from '../investments/HoldingCard';
 import { HoldingDetailSheet } from '../investments/HoldingDetailSheet';
 import { HoldingForm } from '../investments/HoldingForm';
 import { deriveHoldingState } from '../../lib/finance/calculations';
+import { ConfirmActionSheet } from '../ui/ConfirmActionSheet';
 
 interface AccountDetailSheetProps {
   account: Account;
@@ -35,6 +36,8 @@ export const AccountDetailSheet: React.FC<AccountDetailSheetProps> = ({
 
   const [selectedHolding, setSelectedHolding] = useState<InvestmentHolding | null>(null);
   const [isHoldingFormOpen, setIsHoldingFormOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isBlockWarningOpen, setIsBlockWarningOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -84,9 +87,17 @@ export const AccountDetailSheet: React.FC<AccountDetailSheetProps> = ({
   const activeChildren = accounts.filter((a) => a.parentAccountId === account.id && a.isActive);
   const hasActiveChildren = activeChildren.length > 0;
 
-  const handleDeactivate = () => {
-    if (hasActiveChildren) return;
-    deactivateAccount(account.id);
+  const handleDeactivateClick = () => {
+    if (hasActiveChildren) {
+      setIsBlockWarningOpen(true);
+    } else {
+      setIsConfirmOpen(true);
+    }
+  };
+
+  const handleConfirmDeactivate = async () => {
+    await deactivateAccount(account.id);
+    setIsConfirmOpen(false);
     onClose();
   };
 
@@ -306,9 +317,8 @@ export const AccountDetailSheet: React.FC<AccountDetailSheetProps> = ({
 
             {account.isActive && (
               <button
-                onClick={handleDeactivate}
-                disabled={hasActiveChildren}
-                className="flex-1 py-3 bg-rose-50 border border-rose-100 hover:bg-rose-100 text-rose-600 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-ambient hover:scale-[0.99] disabled:scale-100"
+                onClick={handleDeactivateClick}
+                className="flex-1 py-3 bg-rose-50 border border-rose-100 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-ambient hover:scale-[0.99]"
               >
                 <Trash2 size={13} /> Deactivate
               </button>
@@ -347,6 +357,29 @@ export const AccountDetailSheet: React.FC<AccountDetailSheetProps> = ({
           </div>
         </div>
       )}
+
+      {/* Account Deactivation standard confirmation */}
+      <ConfirmActionSheet
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        title="Deactivate account?"
+        message="This account will be hidden from active lists, but historical transactions will remain available."
+        confirmLabel="Deactivate"
+        variant="destructive"
+        onConfirm={handleConfirmDeactivate}
+      />
+
+      {/* Account Deactivation blocked warning */}
+      <ConfirmActionSheet
+        isOpen={isBlockWarningOpen}
+        onClose={() => setIsBlockWarningOpen(false)}
+        title="Deactivate account?"
+        message="This account has active pockets/child accounts. Please deactivate or move them first."
+        confirmLabel="Got it"
+        variant="warning"
+        isOnlyWarning={true}
+        onConfirm={() => setIsBlockWarningOpen(false)}
+      />
     </div>
   );
 };

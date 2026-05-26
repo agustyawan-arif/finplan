@@ -24,6 +24,7 @@ import {
   AboutPockitContent 
 } from '../components/profile/ProfileInfoSheets';
 import { Session } from '@supabase/supabase-js';
+import { ConfirmActionSheet } from '../components/ui/ConfirmActionSheet';
 
 const generateMonths = (): string[] => {
   const months: string[] = [];
@@ -46,6 +47,7 @@ function MainAppContent({ session }: { session: Session | null }) {
   const [activeInfoSheet, setActiveInfoSheet] = useState<'profile' | 'whats_new' | 'help' | 'about' | null>(null);
   const [drawerDefaultType, setDrawerDefaultType] = useState<TransactionType>('expense');
   const [mounted, setMounted] = useState(false);
+  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
 
   React.useEffect(() => {
     setMounted(true);
@@ -194,7 +196,10 @@ function MainAppContent({ session }: { session: Session | null }) {
                   <div className="h-px bg-slate-100 my-1 mx-2" />
                   
                   <button 
-                    onClick={() => supabase.auth.signOut()}
+                    onClick={() => {
+                      setIsProfileMenuOpen(false);
+                      setIsLogoutConfirmOpen(true);
+                    }}
                     className="flex items-center px-3 py-2.5 text-sm font-semibold text-rose-500 hover:bg-rose-50 rounded-xl transition-colors text-left cursor-pointer"
                   >
                     <LogOut size={16} className="mr-3 shrink-0" />
@@ -310,6 +315,19 @@ function MainAppContent({ session }: { session: Session | null }) {
       >
         <AboutPockitContent />
       </InfoSheet>
+
+      <ConfirmActionSheet
+        isOpen={isLogoutConfirmOpen}
+        onClose={() => setIsLogoutConfirmOpen(false)}
+        title="Log out?"
+        message="You’ll need to sign in again to access your finance data."
+        confirmLabel="Log out"
+        variant="destructive"
+        onConfirm={async () => {
+          await supabase.auth.signOut();
+          setIsLogoutConfirmOpen(false);
+        }}
+      />
     </div>
   );
 }
