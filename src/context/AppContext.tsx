@@ -12,15 +12,6 @@ import {
   AssetValuation,
 } from '../types/finance';
 import {
-  mockAccounts,
-  mockCategories,
-  mockBudgets,
-  mockTransactions,
-  mockHoldings,
-  mockExchangeRates,
-  mockValuations,
-} from '../data';
-import {
   calculateAccountBalance,
   calculateNetWorth,
   getAvailableCash,
@@ -29,7 +20,7 @@ import {
   calculateBudgetUsage,
   convertCurrencyToBase,
 } from '../lib/finance/calculations';
-import { runMockDataValidation } from '../lib/finance/mockDataValidation';
+import * as API from '../lib/supabase/api';
 
 interface AppContextType {
   accounts: Account[];
@@ -39,12 +30,13 @@ interface AppContextType {
   holdings: InvestmentHolding[];
   exchangeRates: ExchangeRate[];
   valuations: AssetValuation[];
+  isLoadingData: boolean;
   activeTab: 'home' | 'transactions' | 'budget' | 'accounts' | 'reports';
   setActiveTab: (tab: 'home' | 'transactions' | 'budget' | 'accounts' | 'reports') => void;
   globalMonth: string;
   setGlobalMonth: (month: string) => void;
-  addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  deleteTransaction: (id: string) => void;
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  deleteTransaction: (id: string) => Promise<void>;
   convertCurrencyToBase: (amount: number, currency: string) => number;
   getAccountBalance: (accountId: string) => number;
   getNetWorth: () => number;
@@ -74,15 +66,15 @@ interface AppContextType {
   };
   getCategoryName: (categoryId?: string | null) => string;
   getAccountName: (accountId?: string | null) => string;
-  updateAssetValuation: (holdingId: string, newValue: number, note?: string) => void;
-  addAccount: (input: Omit<Account, 'id' | 'createdAt' | 'updatedAt' | 'isActive'>) => void;
-  updateAccount: (accountId: string, input: Partial<Omit<Account, 'id' | 'createdAt' | 'updatedAt'>>) => void;
-  deactivateAccount: (accountId: string) => void;
-  addBudget: (input: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateBudget: (budgetId: string, input: Partial<Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>>) => void;
-  deleteBudget: (budgetId: string) => void;
-  addHolding: (input: Omit<InvestmentHolding, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateHolding: (holdingId: string, input: Partial<Omit<InvestmentHolding, 'id' | 'createdAt' | 'updatedAt'>>) => void;
+  updateAssetValuation: (holdingId: string, newValue: number, note?: string) => Promise<void>;
+  addAccount: (input: Omit<Account, 'id' | 'createdAt' | 'updatedAt' | 'isActive'>) => Promise<void>;
+  updateAccount: (accountId: string, input: Partial<Omit<Account, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<void>;
+  deactivateAccount: (accountId: string) => Promise<void>;
+  addBudget: (input: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateBudget: (budgetId: string, input: Partial<Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<void>;
+  deleteBudget: (budgetId: string) => Promise<void>;
+  addHolding: (input: Omit<InvestmentHolding, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateHolding: (holdingId: string, input: Partial<Omit<InvestmentHolding, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<void>;
   updateHoldingValue: (
     holdingId: string,
     valueInput: {
@@ -92,10 +84,10 @@ interface AppContextType {
       valuationDate: string;
       note?: string;
     }
-  ) => void;
-  addAssetValuation: (input: Omit<AssetValuation, 'id' | 'createdAt'>) => void;
-  addExchangeRate: (input: Omit<ExchangeRate, 'id' | 'createdAt'>) => void;
-  updateExchangeRate: (rateId: string, input: Partial<Omit<ExchangeRate, 'id' | 'createdAt'>>) => void;
+  ) => Promise<void>;
+  addAssetValuation: (input: Omit<AssetValuation, 'id' | 'createdAt'>) => Promise<void>;
+  addExchangeRate: (input: Omit<ExchangeRate, 'id' | 'createdAt'>) => Promise<void>;
+  updateExchangeRate: (rateId: string, input: Partial<Omit<ExchangeRate, 'id' | 'createdAt'>>) => Promise<void>;
   addAssetBuyTransaction: (input: {
     amount: number;
     fromAccountId: string;
@@ -105,7 +97,7 @@ interface AppContextType {
     price?: number;
     title?: string;
     note?: string;
-  }) => void;
+  }) => Promise<void>;
   addAssetSellTransaction: (input: {
     amount: number;
     holdingId: string;
@@ -116,7 +108,7 @@ interface AppContextType {
     realizedGain?: number;
     title?: string;
     note?: string;
-  }) => void;
+  }) => Promise<void>;
   addAssetValueUpdateTransaction: (input: {
     holdingId: string;
     currentValue: number;
@@ -124,31 +116,65 @@ interface AppContextType {
     currentPrice?: number;
     exchangeRateToBase?: number;
     note?: string;
-  }) => void;
+  }) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string }> = ({ children, userId }) => {
   const [activeTab, setActiveTab] = useState<'home' | 'transactions' | 'budget' | 'accounts' | 'reports'>('home');
   const [globalMonth, setGlobalMonth] = useState('2026-05');
-  const [accounts, setAccounts] = useState<Account[]>(mockAccounts);
-  const [categories] = useState<Category[]>(mockCategories);
-  const [budgets, setBudgets] = useState<Budget[]>(mockBudgets);
-  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions);
-  const [holdings, setHoldings] = useState<InvestmentHolding[]>(mockHoldings);
-  const [exchangeRates, setExchangeRates] = useState<ExchangeRate[]>(mockExchangeRates);
-  const [valuations, setValuations] = useState<AssetValuation[]>(mockValuations);
+  
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [holdings, setHoldings] = useState<InvestmentHolding[]>([]);
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRate[]>([]);
+  const [valuations, setValuations] = useState<AssetValuation[]>([]);
 
   React.useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      try {
-        runMockDataValidation();
-      } catch (err) {
-        console.error('Validation failed:', err);
-      }
+    if (!userId) {
+      setAccounts([]);
+      setCategories([]);
+      setBudgets([]);
+      setTransactions([]);
+      setHoldings([]);
+      setExchangeRates([]);
+      setValuations([]);
+      setIsLoadingData(false);
+      return;
     }
-  }, []);
+
+    const loadData = async () => {
+      setIsLoadingData(true);
+      try {
+        let data = await API.fetchAllFinanceData(userId);
+        
+        if (data.categories.length === 0) {
+          // New user -> seed categories
+          await API.seedDefaultCategories(userId);
+          data = await API.fetchAllFinanceData(userId); // reload
+        }
+
+        setAccounts(data.accounts);
+        setCategories(data.categories);
+        setBudgets(data.budgets);
+        setTransactions(data.transactions);
+        setHoldings(data.holdings);
+        setValuations(data.valuations);
+        setExchangeRates(data.exchangeRates);
+      } catch (err: any) {
+        console.error('Failed to load finance data', err);
+        alert('Failed to load finance data from server: ' + err.message);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    loadData();
+  }, [userId]);
 
   // Helper: Currency conversion to Base Currency (IDR)
   const convertCurrencyToBaseWrapper = (amount: number, currency: string): number => {
@@ -244,10 +270,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               else if (t.type === 'transfer' && t.destinationAccountId) {
                 const destAcc = accounts.find((a) => a.id === t.destinationAccountId);
                 if (destAcc) {
-                  if (destAcc.purpose === 'emergency_fund' && c.id === 'cat_emg_fund') isMatch = true;
-                  else if (destAcc.purpose === 'travel_fund' && c.id === 'cat_travel_fund') isMatch = true;
-                  else if (destAcc.purpose === 'investment' && c.id === 'cat_investment') isMatch = true;
-                  else if (destAcc.purpose === 'deposit' && c.id === 'cat_deposit') isMatch = true;
+                  if (destAcc.purpose === 'emergency_fund' && c.name === 'Emergency Fund') isMatch = true;
+                  else if (destAcc.purpose === 'travel_fund' && c.name === 'Travel Fund') isMatch = true;
+                  else if (destAcc.purpose === 'investment' && c.name === 'Investment') isMatch = true;
+                  else if (destAcc.purpose === 'deposit' && c.name === 'Deposit') isMatch = true;
                 }
               }
 
@@ -298,37 +324,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   };
 
-  // Add a new mock transaction with interactive side effects on holdings
-  const addTransaction = (tData: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const id = `t_user_${Date.now()}`;
-    const timestamp = new Date().toISOString();
-    const newTx: Transaction = {
-      ...tData,
-      id,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    };
-
-    setTransactions((prev) => [newTx, ...prev]);
-    // NOTE: Do NOT mutate holding state here.
-    // deriveHoldingState() in calculations.ts replays all transactions
-    // from the initial holding snapshot to produce accurate current values.
+  // Transactions CRUD
+  const addTransaction = async (tData: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => {
+    if (!userId) return;
+    try {
+      const newTx = await API.insertTransaction(tData, userId);
+      setTransactions((prev) => [newTx, ...prev]);
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to add transaction: ' + err.message);
+    }
   };
 
-  // Delete transaction
-  const deleteTransaction = (id: string) => {
-    setTransactions((prev) => prev.filter((t) => t.id !== id));
+  const deleteTransaction = async (id: string) => {
+    if (!userId) return;
+    try {
+      await API.deleteTransactionRecord(id);
+      setTransactions((prev) => prev.filter((t) => t.id !== id));
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to delete transaction: ' + err.message);
+    }
   };
 
-  // Manual asset valuation update (legacy — use addAssetValueUpdateTransaction instead)
-  const updateAssetValuation = (holdingId: string, newValue: number, note?: string) => {
-    // Only record the transaction; deriveHoldingState will compute the new value
+  const updateAssetValuation = async (holdingId: string, newValue: number, note?: string) => {
+    if (!userId) return;
     const targetHolding = holdings.find((h) => h.id === holdingId);
     if (targetHolding) {
-      addTransaction({
+      await addTransaction({
         type: 'asset_value_update',
         date: new Date().toISOString().split('T')[0],
-        amount: newValue, // absolute new value
+        amount: newValue,
         currency: targetHolding.currency,
         accountId: targetHolding.accountId,
         holdingId: holdingId,
@@ -341,131 +367,142 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Add Account
-  const addAccount = (input: Omit<Account, 'id' | 'createdAt' | 'updatedAt' | 'isActive'>) => {
-    const id = `acc_user_${Date.now()}`;
-    const timestamp = new Date().toISOString();
-    const newAcc: Account = {
-      ...input,
-      id,
-      isActive: true,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    };
-    setAccounts((prev) => [...prev, newAcc]);
+  // Accounts CRUD
+  const addAccount = async (input: Omit<Account, 'id' | 'createdAt' | 'updatedAt' | 'isActive'>) => {
+    if (!userId) return;
+    try {
+      const newAcc = await API.insertAccount(input, userId);
+      setAccounts((prev) => [...prev, newAcc]);
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to add account: ' + err.message);
+    }
   };
 
-  // Update Account
-  const updateAccount = (
-    accountId: string,
-    input: Partial<Omit<Account, 'id' | 'createdAt' | 'updatedAt'>>
-  ) => {
-    const timestamp = new Date().toISOString();
-    setAccounts((prev) =>
-      prev.map((acc) => (acc.id === accountId ? { ...acc, ...input, updatedAt: timestamp } : acc))
-    );
+  const updateAccount = async (accountId: string, input: Partial<Omit<Account, 'id' | 'createdAt' | 'updatedAt'>>) => {
+    if (!userId) return;
+    try {
+      const updatedAcc = await API.updateAccountRecord(accountId, input);
+      setAccounts((prev) => prev.map((acc) => (acc.id === accountId ? updatedAcc : acc)));
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to update account: ' + err.message);
+    }
   };
 
-  // Deactivate Account
-  const deactivateAccount = (accountId: string) => {
-    const timestamp = new Date().toISOString();
-    setAccounts((prev) =>
-      prev.map((acc) => (acc.id === accountId ? { ...acc, isActive: false, updatedAt: timestamp } : acc))
-    );
+  const deactivateAccount = async (accountId: string) => {
+    if (!userId) return;
+    try {
+      const updatedAcc = await API.updateAccountRecord(accountId, { isActive: false });
+      setAccounts((prev) => prev.map((acc) => (acc.id === accountId ? updatedAcc : acc)));
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to deactivate account: ' + err.message);
+    }
   };
 
-  // Add Budget
-  const addBudget = (input: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const id = `b_user_${Date.now()}`;
-    const timestamp = new Date().toISOString();
-    const newBudget: Budget = {
-      ...input,
-      id,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    };
-    setBudgets((prev) => [...prev, newBudget]);
+  // Budgets CRUD
+  const addBudget = async (input: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>) => {
+    if (!userId) return;
+    try {
+      const newBudget = await API.insertBudget(input, userId);
+      setBudgets((prev) => [...prev, newBudget]);
+    } catch (err: any) {
+      console.error(err);
+      if (err.code === '23505') { // Postgres unique violation code usually
+        alert('A budget for this category and month already exists.');
+      } else {
+        alert('Failed to add budget: ' + err.message);
+      }
+    }
   };
 
-  // Update Budget
-  const updateBudget = (
-    budgetId: string,
-    input: Partial<Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>>
-  ) => {
-    const timestamp = new Date().toISOString();
-    setBudgets((prev) =>
-      prev.map((b) => (b.id === budgetId ? { ...b, ...input, updatedAt: timestamp } : b))
-    );
+  const updateBudget = async (budgetId: string, input: Partial<Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>>) => {
+    if (!userId) return;
+    try {
+      const updatedBudget = await API.updateBudgetRecord(budgetId, input);
+      setBudgets((prev) => prev.map((b) => (b.id === budgetId ? updatedBudget : b)));
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to update budget: ' + err.message);
+    }
   };
 
-  // Delete Budget
-  const deleteBudget = (budgetId: string) => {
-    setBudgets((prev) => prev.filter((b) => b.id !== budgetId));
+  const deleteBudget = async (budgetId: string) => {
+    if (!userId) return;
+    try {
+      await API.deleteBudgetRecord(budgetId);
+      setBudgets((prev) => prev.filter((b) => b.id !== budgetId));
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to delete budget: ' + err.message);
+    }
   };
 
-  // Add Investment Holding
-  const addHolding = (input: Omit<InvestmentHolding, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const id = `h_user_${Date.now()}`;
-    const timestamp = new Date().toISOString();
-    const newHolding: InvestmentHolding = {
-      ...input,
-      id,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    };
-    setHoldings((prev) => [...prev, newHolding]);
+  // Holdings CRUD
+  const addHolding = async (input: Omit<InvestmentHolding, 'id' | 'createdAt' | 'updatedAt'>) => {
+    if (!userId) return;
+    try {
+      const newHolding = await API.insertHolding(input, userId);
+      setHoldings((prev) => [...prev, newHolding]);
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to add holding: ' + err.message);
+    }
   };
 
-  // Update Investment Holding
-  const updateHolding = (
-    holdingId: string,
-    input: Partial<Omit<InvestmentHolding, 'id' | 'createdAt' | 'updatedAt'>>
-  ) => {
-    const timestamp = new Date().toISOString();
-    setHoldings((prev) =>
-      prev.map((h) => (h.id === holdingId ? { ...h, ...input, updatedAt: timestamp } : h))
-    );
+  const updateHolding = async (holdingId: string, input: Partial<Omit<InvestmentHolding, 'id' | 'createdAt' | 'updatedAt'>>) => {
+    if (!userId) return;
+    try {
+      const updatedHolding = await API.updateHoldingRecord(holdingId, input);
+      setHoldings((prev) => prev.map((h) => (h.id === holdingId ? updatedHolding : h)));
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to update holding: ' + err.message);
+    }
   };
 
-  // Add Asset Valuation Record
-  const addAssetValuation = (input: Omit<AssetValuation, 'id' | 'createdAt'>) => {
-    const id = `val_user_${Date.now()}`;
-    const newValuation: AssetValuation = {
-      ...input,
-      id,
-      createdAt: new Date().toISOString(),
-    };
-    setValuations((prev) => [newValuation, ...prev]);
+  // Valuations & Exchange Rates CRUD
+  const addAssetValuation = async (input: Omit<AssetValuation, 'id' | 'createdAt'>) => {
+    if (!userId) return;
+    try {
+      const newValuation = await API.insertAssetValuation(input, userId);
+      setValuations((prev) => [newValuation, ...prev]);
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to add valuation: ' + err.message);
+    }
   };
 
-  // Add Manual Exchange Rate
-  const addExchangeRate = (input: Omit<ExchangeRate, 'id' | 'createdAt'>) => {
-    const id = `er_user_${Date.now()}`;
-    const newRate: ExchangeRate = {
-      ...input,
-      id,
-      createdAt: new Date().toISOString(),
-    };
-    setExchangeRates((prev) => {
-      const filtered = prev.filter(
-        (e) => !(e.fromCurrency === input.fromCurrency && e.toCurrency === input.toCurrency)
-      );
-      return [...filtered, newRate];
-    });
+  const addExchangeRate = async (input: Omit<ExchangeRate, 'id' | 'createdAt'>) => {
+    if (!userId) return;
+    try {
+      const newRate = await API.insertExchangeRate(input, userId);
+      setExchangeRates((prev) => {
+        const filtered = prev.filter(
+          (e) => !(e.fromCurrency === input.fromCurrency && e.toCurrency === input.toCurrency)
+        );
+        return [...filtered, newRate];
+      });
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to add exchange rate: ' + err.message);
+    }
   };
 
-  // Update Manual Exchange Rate
-  const updateExchangeRate = (
-    rateId: string,
-    input: Partial<Omit<ExchangeRate, 'id' | 'createdAt'>>
-  ) => {
-    setExchangeRates((prev) =>
-      prev.map((er) => (er.id === rateId ? { ...er, ...input } : er))
-    );
+  const updateExchangeRate = async (rateId: string, input: Partial<Omit<ExchangeRate, 'id' | 'createdAt'>>) => {
+    if (!userId) return;
+    try {
+      const updatedRate = await API.updateExchangeRateRecord(rateId, input);
+      setExchangeRates((prev) => prev.map((er) => (er.id === rateId ? updatedRate : er)));
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to update exchange rate: ' + err.message);
+    }
   };
 
-  // Add Asset Buy Transaction wrapper with side-effects on holding balances
-  const addAssetBuyTransaction = (input: {
+  // Complex Asset Operations
+  const addAssetBuyTransaction = async (input: {
     amount: number;
     fromAccountId: string;
     holdingId: string;
@@ -475,20 +512,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     title?: string;
     note?: string;
   }) => {
+    if (!userId) return;
     const targetHolding = holdings.find((h) => h.id === input.holdingId);
     const sourceAccount = accounts.find((a) => a.id === input.fromAccountId);
     if (!targetHolding || !sourceAccount) return;
 
-    const txId = `t_user_${Date.now()}`;
-    const timestamp = new Date().toISOString();
-    
-    // Auto-match to investment category
     const investCatId = categories.find(
-      (c) => c.id === 'cat_investment' || c.parentCategoryId === 'cat_saving'
+      (c) => c.name === 'Investment' && c.kind === 'allocation'
     )?.id || null;
 
-    const newTx: Transaction = {
-      id: txId,
+    await addTransaction({
       type: 'asset_buy',
       date: input.date,
       amount: input.amount,
@@ -501,17 +534,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       exchangeRateToBase: convertCurrencyToBaseWrapper(1, sourceAccount.currency),
       isExcludedFromBudget: true,
       isExcludedFromCashflow: true,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    };
-
-    setTransactions((prev) => [newTx, ...prev]);
-    // NOTE: holding values are NOT mutated here.
-    // deriveHoldingState replays from initial snapshot + all transactions.
+    });
   };
 
-  // Add Asset Sell Transaction wrapper with side-effects on holding balances
-  const addAssetSellTransaction = (input: {
+  const addAssetSellTransaction = async (input: {
     amount: number;
     holdingId: string;
     destinationAccountId: string;
@@ -522,15 +548,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     title?: string;
     note?: string;
   }) => {
+    if (!userId) return;
     const targetHolding = holdings.find((h) => h.id === input.holdingId);
     const destAccount = accounts.find((a) => a.id === input.destinationAccountId);
     if (!targetHolding || !destAccount) return;
 
-    const txId = `t_user_${Date.now()}`;
-    const timestamp = new Date().toISOString();
-
-    const newTx: Transaction = {
-      id: txId,
+    await addTransaction({
       type: 'asset_sell',
       date: input.date,
       amount: input.amount,
@@ -543,26 +566,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       exchangeRateToBase: convertCurrencyToBaseWrapper(1, destAccount.currency),
       isExcludedFromBudget: true,
       isExcludedFromCashflow: true,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    };
+    });
 
-    setTransactions((prev) => [newTx, ...prev]);
-
-    // Only update status metadata — values are derived by deriveHoldingState
     const derivedAfterSell = (() => {
       const avgCost = targetHolding.averageCost || 0;
       const sellQty = input.quantity || (input.price && input.price > 0 ? input.amount / input.price : 0);
       const remainingQty = Math.max(0, (targetHolding.quantity || 0) - sellQty);
       return remainingQty;
     })();
+    
     if (derivedAfterSell === 0) {
-      updateHolding(input.holdingId, { status: 'sold' });
+      await updateHolding(input.holdingId, { status: 'sold' });
     }
   };
 
-  // Add Asset Value Update Transaction wrapper
-  const addAssetValueUpdateTransaction = (input: {
+  const addAssetValueUpdateTransaction = async (input: {
     holdingId: string;
     currentValue: number;
     valuationDate: string;
@@ -570,46 +588,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     exchangeRateToBase?: number;
     note?: string;
   }) => {
+    if (!userId) return;
     const targetHolding = holdings.find((h) => h.id === input.holdingId);
     if (!targetHolding) return;
 
-    // 1. Create asset valuation record
-    addAssetValuation({
-      holdingId: input.holdingId,
-      valuationDate: input.valuationDate,
-      price: input.currentPrice || null,
-      value: input.currentValue,
-      exchangeRateToBase: input.exchangeRateToBase || null,
-      note: input.note,
-    });
+    try {
+      const newValuation = await API.insertAssetValuation({
+        holdingId: input.holdingId,
+        valuationDate: input.valuationDate,
+        price: input.currentPrice || null,
+        value: input.currentValue,
+        exchangeRateToBase: input.exchangeRateToBase || null,
+        note: input.note,
+      }, userId);
+      setValuations((prev) => [newValuation, ...prev]);
 
-    // 2. Create asset_value_update transaction
-    const txId = `t_user_${Date.now()}`;
-    const timestamp = new Date().toISOString();
-    const newTx: Transaction = {
-      id: txId,
-      type: 'asset_value_update',
-      date: input.valuationDate,
-      amount: input.currentValue,
-      currency: targetHolding.currency,
-      accountId: targetHolding.accountId,
-      holdingId: input.holdingId,
-      title: `Valuation Update: ${targetHolding.name}`,
-      note: input.note || 'Manual price adjustment',
-      exchangeRateToBase: input.exchangeRateToBase || convertCurrencyToBaseWrapper(1, targetHolding.currency),
-      isExcludedFromBudget: true,
-      isExcludedFromCashflow: true,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    };
-    setTransactions((prev) => [newTx, ...prev]);
-    // NOTE: Do NOT call updateHolding for values here.
-    // deriveHoldingState replays the asset_value_update transaction and sets
-    // currentValue = tx.amount (absolute), so net worth stays correct.
+      await addTransaction({
+        type: 'asset_value_update',
+        date: input.valuationDate,
+        amount: input.currentValue,
+        currency: targetHolding.currency,
+        accountId: targetHolding.accountId,
+        holdingId: input.holdingId,
+        title: `Valuation Update: ${targetHolding.name}`,
+        note: input.note || 'Manual price adjustment',
+        exchangeRateToBase: input.exchangeRateToBase || convertCurrencyToBaseWrapper(1, targetHolding.currency),
+        isExcludedFromBudget: true,
+        isExcludedFromCashflow: true,
+      });
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to update asset value: ' + err.message);
+    }
   };
 
-  // Helper valuation mutator bridging context
-  const updateHoldingValue = (
+  const updateHoldingValue = async (
     holdingId: string,
     valueInput: {
       currentValue: number;
@@ -619,7 +632,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       note?: string;
     }
   ) => {
-    addAssetValueUpdateTransaction({
+    await addAssetValueUpdateTransaction({
       holdingId,
       currentValue: valueInput.currentValue,
       valuationDate: valueInput.valuationDate,
@@ -639,6 +652,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         holdings,
         exchangeRates,
         valuations,
+        isLoadingData,
         activeTab,
         setActiveTab,
         globalMonth,
