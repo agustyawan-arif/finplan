@@ -61,7 +61,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
   const toAccount = accounts.find((a) => a.id === toAccountId);
   const showExchangeRate = fromAccount && toAccount && fromAccount.currency !== toAccount.currency;
 
-  // Auto-set mock exchange rate helper when currencies differ
+  // Auto-set default exchange rate fallback helper when currencies differ
   useEffect(() => {
     if (showExchangeRate && fromAccount && toAccount) {
       if (fromAccount.currency === 'SGD' && toAccount.currency === 'IDR') {

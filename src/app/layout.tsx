@@ -10,7 +10,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: `${APP_CONFIG.appName} — ${APP_CONFIG.appLabel}`,
-  description: "A premium, mobile-first money manager optimized for iOS.",
+  description: "Personal finance and money management app",
 };
 
 export const viewport: Viewport = {
