@@ -338,7 +338,7 @@ export const TransactionsTab: React.FC<TransactionsTabProps> = ({ onOpenDrawer }
       {/* Floating Add Transaction Trigger Button */}
       <button
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className={`absolute bottom-[88px] right-6 w-12 h-12 rounded-full shadow-ambient-lg flex items-center justify-center transition-all duration-300 active:scale-90 z-50 ${
+        className={`absolute bottom-[calc(88px+env(safe-area-inset-bottom,0px))] right-6 w-12 h-12 rounded-full shadow-ambient-lg flex items-center justify-center transition-all duration-300 active:scale-90 z-50 ${
           isMenuOpen ? 'bg-[#0f172a] text-white rotate-180' : 'bg-primary text-white'
         }`}
       >

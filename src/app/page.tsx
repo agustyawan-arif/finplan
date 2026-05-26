@@ -195,7 +195,7 @@ function MainAppContent({ session }: { session: Session | null }) {
       {renderTabContent()}
 
       {/* iOS styled Bottom Tab Bar Navigation */}
-      <nav className="absolute bottom-0 left-0 right-0 h-16 bg-white/95 backdrop-blur-md border-t border-slate-100 flex items-center justify-around px-2 pb-1 z-30 shadow-ambient-lg select-none">
+      <nav className="absolute bottom-0 left-0 right-0 h-[calc(64px+env(safe-area-inset-bottom,0px))] bg-white/95 backdrop-blur-md border-t border-slate-100 flex items-center justify-around px-2 pb-[env(safe-area-inset-bottom,0px)] z-30 shadow-ambient-lg select-none">
         {navTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -203,7 +203,7 @@ function MainAppContent({ session }: { session: Session | null }) {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className="flex flex-col items-center justify-center flex-1 h-full py-1 text-[9px] font-bold transition-all relative"
+              className="flex flex-col items-center justify-center flex-1 h-full py-1 text-[9px] font-bold transition-all relative -translate-y-1.5"
             >
               <div
                 className={`p-1.5 rounded-full mb-0.5 transition-all ${
@@ -214,14 +214,13 @@ function MainAppContent({ session }: { session: Session | null }) {
               >
                 <Icon size={18} className={isActive ? 'stroke-[2.5]' : 'stroke-[1.8]'} />
               </div>
-              <span className={isActive ? 'text-[#0b1c30]' : 'text-slate-400'}>
+              <span className={`relative inline-block ${isActive ? 'text-[#0b1c30]' : 'text-slate-400'}`}>
                 {tab.label}
+                {/* Subtle active visual indicator dot */}
+                {isActive && (
+                  <div className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-1 h-1 bg-[#0b1c30] rounded-full animate-fade-in" />
+                )}
               </span>
-              
-              {/* Subtle active visual indicator dot */}
-              {isActive && (
-                <div className="absolute bottom-1 w-1 h-1 bg-[#0b1c30] rounded-full animate-fade-in" />
-              )}
             </button>
           );
         })}

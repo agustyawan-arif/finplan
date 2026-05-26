@@ -108,7 +108,7 @@ export const BudgetTab: React.FC = () => {
       {hasBudgetSet && (
         <button
           onClick={handleAddBudgetClick}
-          className="absolute bottom-[88px] right-6 w-12 h-12 rounded-full bg-primary text-white shadow-ambient-lg flex items-center justify-center hover:scale-95 transition-all active:scale-90 z-20 cursor-pointer"
+          className="absolute bottom-[calc(88px+env(safe-area-inset-bottom,0px))] right-6 w-12 h-12 rounded-full bg-primary text-white shadow-ambient-lg flex items-center justify-center hover:scale-95 transition-all active:scale-90 z-20 cursor-pointer"
         >
           <Plus size={24} className="stroke-[2.5]" />
         </button>

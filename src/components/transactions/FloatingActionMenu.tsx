@@ -49,7 +49,7 @@ export const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({
       />
       
       {/* Menu Container: Floating Sheet positioned nicely above the navigation bar */}
-      <div className="relative z-50 mb-[148px] px-5 w-full max-w-[393px] mx-auto animate-slide-up select-none">
+      <div className="relative z-50 mb-[calc(148px+env(safe-area-inset-bottom,0px))] px-5 w-full max-w-[393px] mx-auto animate-slide-up select-none">
         <div className="bg-white rounded-[28px] shadow-ambient-lg border border-slate-100 p-5 space-y-5">
           {groups.map((group) => {
             const isMaintenance = group.title === 'Maintenance';
