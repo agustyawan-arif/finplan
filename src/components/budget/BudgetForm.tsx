@@ -3,7 +3,8 @@ import { useApp } from '../../context/AppContext';
 import { FormInput, FormTextarea, SubmitButton } from '../transactions/TransactionFormFields';
 import { CurrencyCode } from '../../types/finance';
 import { CategorySelectorBottomSheet } from '../transactions/SelectorBottomSheet';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Trash2 } from 'lucide-react';
+import { ConfirmActionSheet } from '../ui/ConfirmActionSheet';
 
 interface BudgetFormProps {
   onSuccess: () => void;
@@ -16,7 +17,7 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({
   selectedMonth,
   defaultCategoryId = '',
 }) => {
-  const { categories, budgets, addBudget, updateBudget, getCategoryName } = useApp();
+  const { categories, budgets, addBudget, updateBudget, deleteBudget, getCategoryName } = useApp();
 
   const [month, setMonth] = useState(selectedMonth);
   const [categoryId, setCategoryId] = useState(defaultCategoryId);
@@ -27,6 +28,7 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({
   const [note, setNote] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
+  const [isRemoveConfirmOpen, setIsRemoveConfirmOpen] = useState(false);
 
   // Sync state when selectedMonth or category changes
   useEffect(() => {
@@ -103,94 +105,134 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({
     onSuccess();
   };
 
+  const handleRemoveClick = () => {
+    setIsRemoveConfirmOpen(true);
+  };
+
+  const handleConfirmRemove = async () => {
+    const existing = budgets.find((b) => b.month === month && b.categoryId === categoryId);
+    if (existing) {
+      try {
+        await deleteBudget(existing.id);
+        setIsRemoveConfirmOpen(false);
+        onSuccess();
+      } catch (err: any) {
+        setErrorMessage('Failed to remove budget: ' + err.message);
+      }
+    }
+  };
+
   const parentCategories = categories.filter(
     (c) => !c.parentCategoryId && c.id !== 'cat_income_root'
   );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {errorMessage && (
-        <p className="text-rose-500 text-[10px] font-extrabold bg-rose-50 border border-rose-100 px-3 py-2 rounded-lg animate-pulse">
-          ⚠️ {errorMessage}
-        </p>
-      )}
+    <>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {errorMessage && (
+          <p className="text-rose-500 text-[10px] font-extrabold bg-rose-50 border border-rose-100 px-3 py-2 rounded-lg animate-pulse">
+            ⚠️ {errorMessage}
+          </p>
+        )}
 
-      {infoMessage && (
-        <p className="text-[#006c49] text-[9px] font-bold bg-emerald-50 border border-emerald-100 px-3 py-2 rounded-lg leading-snug">
-          {infoMessage}
-        </p>
-      )}
+        {infoMessage && (
+          <p className="text-[#006c49] text-[9px] font-bold bg-emerald-50 border border-emerald-100 px-3 py-2 rounded-lg leading-snug">
+            {infoMessage}
+          </p>
+        )}
 
-      <div className="space-y-3">
-        <FormInput
-          label="Budget Month (YYYY-MM)"
-          type="text"
-          placeholder="e.g. 2026-05"
-          value={month}
-          onChange={(e) => setMonth(e.target.value)}
-          required
-        />
+        <div className="space-y-3">
+          <FormInput
+            label="Budget Month (YYYY-MM)"
+            type="text"
+            placeholder="e.g. 2026-05"
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+            required
+          />
 
-        <div>
-          <span className="text-xs font-bold text-slate-800 block mb-1.5 ml-1">Target Budget Category</span>
-          <button
-            type="button"
-            onClick={() => setIsCategorySheetOpen(true)}
-            className="w-full text-left p-3.5 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0f172a] focus:ring-offset-1 transition-all flex items-center justify-between group hover:bg-slate-100"
-          >
-            <span className={categoryId ? 'text-sm font-bold text-[#0b1c30]' : 'text-sm font-semibold text-slate-400'}>
-              {categoryId ? getCategoryName(categoryId) : 'Select a category'}
-            </span>
-            <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center border border-slate-100 group-hover:border-slate-200">
-              <ChevronDown size={14} className="text-slate-500" />
-            </div>
-          </button>
-        </div>
-
-        <CategorySelectorBottomSheet
-          isOpen={isCategorySheetOpen}
-          onClose={() => setIsCategorySheetOpen(false)}
-          title="Select Budget Category"
-          selectedId={categoryId}
-          onSelect={(c) => setCategoryId(c.id)}
-          isBudgetSelector={true}
-        />
-
-        <FormInput
-          label={`Target Planned Limit (${currency})`}
-          type="number"
-          placeholder="0"
-          value={plannedAmount}
-          onChange={(e) => setPlannedAmount(e.target.value)}
-          required
-        />
-
-        {/* Rollover checkbox */}
-        <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl select-none">
           <div>
-            <span className="text-xs font-bold text-slate-800 block">Enable Budget Rollover</span>
-            <span className="text-[8px] text-slate-400 font-medium leading-none block mt-0.5">
-              Accumulate unused margins to the next month's allocation
-            </span>
+            <span className="text-xs font-bold text-slate-800 block mb-1.5 ml-1">Target Budget Category</span>
+            <button
+              type="button"
+              onClick={() => setIsCategorySheetOpen(true)}
+              className="w-full text-left p-3.5 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0f172a] focus:ring-offset-1 transition-all flex items-center justify-between group hover:bg-slate-100"
+            >
+              <span className={categoryId ? 'text-sm font-bold text-[#0b1c30]' : 'text-sm font-semibold text-slate-400'}>
+                {categoryId ? getCategoryName(categoryId) : 'Select a category'}
+              </span>
+              <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center border border-slate-100 group-hover:border-slate-200">
+                <ChevronDown size={14} className="text-slate-500" />
+              </div>
+            </button>
           </div>
-          <input
-            type="checkbox"
-            checked={rolloverEnabled}
-            onChange={(e) => setRolloverEnabled(e.target.checked)}
-            className="w-4 h-4 text-primary focus:ring-0 rounded-sm cursor-pointer"
+
+          <CategorySelectorBottomSheet
+            isOpen={isCategorySheetOpen}
+            onClose={() => setIsCategorySheetOpen(false)}
+            title="Select Budget Category"
+            selectedId={categoryId}
+            onSelect={(c) => setCategoryId(c.id)}
+            isBudgetSelector={true}
+          />
+
+          <FormInput
+            label={`Target Planned Limit (${currency})`}
+            type="number"
+            placeholder="0"
+            value={plannedAmount}
+            onChange={(e) => setPlannedAmount(e.target.value)}
+            required
+          />
+
+          {/* Rollover checkbox */}
+          <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl select-none">
+            <div>
+              <span className="text-xs font-bold text-slate-800 block">Enable Budget Rollover</span>
+              <span className="text-[8px] text-slate-400 font-medium leading-none block mt-0.5">
+                Accumulate unused margins to the next month's allocation
+              </span>
+            </div>
+            <input
+              type="checkbox"
+              checked={rolloverEnabled}
+              onChange={(e) => setRolloverEnabled(e.target.checked)}
+              className="w-4 h-4 text-primary focus:ring-0 rounded-sm cursor-pointer"
+            />
+          </div>
+
+          <FormTextarea
+            label="Budget Goals / Note (Optional)"
+            placeholder="e.g. Keep food delivery under control this month..."
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
           />
         </div>
 
-        <FormTextarea
-          label="Budget Goals / Note (Optional)"
-          placeholder="e.g. Keep food delivery under control this month..."
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-        />
-      </div>
+        <div className="flex flex-col gap-2 pt-2">
+          <SubmitButton>{infoMessage ? 'Update Budget Plan' : 'Establish Budget'}</SubmitButton>
+          {budgets.some((b) => b.month === month && b.categoryId === categoryId) && (
+            <button
+              type="button"
+              onClick={handleRemoveClick}
+              className="w-full py-3.5 bg-rose-50 border border-rose-100 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-ambient hover:scale-[0.99] cursor-pointer"
+            >
+              <Trash2 size={13} /> Remove Budget Goal
+            </button>
+          )}
+        </div>
+      </form>
 
-      <SubmitButton>{infoMessage ? 'Update Budget Plan' : 'Establish Budget'}</SubmitButton>
-    </form>
+      <ConfirmActionSheet
+        isOpen={isRemoveConfirmOpen}
+        onClose={() => setIsRemoveConfirmOpen(false)}
+        title="Remove budget goal?"
+        message="This will remove the budget target for this month. Existing transactions will not be deleted."
+        confirmLabel="Remove"
+        variant="destructive"
+        onConfirm={handleConfirmRemove}
+      />
+    </>
   );
 };
 export default BudgetForm;

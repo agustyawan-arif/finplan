@@ -1,5 +1,10 @@
 export const APP_CONFIG = {
-  appName: "Finplan",
+  appName: "Pockit",
   appLabel: "Personal Finance",
-  versionLabel: "Prototype v1.0",
+  version: "0.1.0",
+  releaseLabel: "Private Beta",
+  tagline: "Your money, neatly pocketed.",
+  description: "Personal finance and money management app.",
+  versionLabel: "v0.1.0 — Private Beta",
 };
+

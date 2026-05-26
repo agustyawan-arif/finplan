@@ -9,8 +9,30 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: `${APP_CONFIG.appName} — ${APP_CONFIG.appLabel}`,
-  description: "Personal finance and money management app",
+  title: {
+    default: `${APP_CONFIG.appName} — ${APP_CONFIG.appLabel}`,
+    template: `%s | ${APP_CONFIG.appName}`,
+  },
+  description: APP_CONFIG.description,
+  openGraph: {
+    title: APP_CONFIG.appName,
+    description: "Track budgets, accounts, investments, and net worth in one personal finance app.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: `${APP_CONFIG.appName} — ${APP_CONFIG.tagline}`,
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: APP_CONFIG.appName,
+    description: APP_CONFIG.description,
+    images: ["/og-image.png"],
+  },
 };
 
 export const viewport: Viewport = {

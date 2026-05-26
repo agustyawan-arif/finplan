@@ -6,6 +6,7 @@ import { CurrencyInput, FormInput, FormTextarea, SubmitButton, FormPickerTrigger
 import { CurrencyCode } from '../../types/finance';
 import { AccountSelectorBottomSheet, HoldingSelectorBottomSheet } from './SelectorBottomSheet';
 import { DatePickerBottomSheet } from './DatePickerBottomSheet';
+import { ConfirmActionSheet } from '../ui/ConfirmActionSheet';
 
 interface AssetSellFormProps {
   onSuccess: () => void;
@@ -31,6 +32,7 @@ export const AssetSellForm: React.FC<AssetSellFormProps> = ({
   const [realizedGain, setRealizedGain] = useState('');
   const [note, setNote] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   // Picker sheets visibility
   const [isHoldingPickerOpen, setIsHoldingPickerOpen] = useState(false);
@@ -103,19 +105,33 @@ export const AssetSellForm: React.FC<AssetSellFormProps> = ({
       return;
     }
 
-    addAssetSellTransaction({
-      amount: parsedAmount,
-      holdingId,
-      destinationAccountId,
-      date,
-      quantity: parsedQuantity,
-      price: parsedPrice,
-      realizedGain: realizedGain ? parseFloat(realizedGain) : undefined,
-      title: title.trim() || undefined,
-      note: note.trim() || undefined,
-    });
+    setIsConfirmOpen(true);
+  };
 
-    onSuccess();
+  const handleConfirmSell = async () => {
+    const parsedAmount = parseFloat(amount);
+    const parsedQuantity = quantity ? parseFloat(quantity) : undefined;
+    const parsedPrice = price ? parseFloat(price) : undefined;
+
+    try {
+      await addAssetSellTransaction({
+        amount: parsedAmount,
+        holdingId,
+        destinationAccountId,
+        date,
+        quantity: parsedQuantity,
+        price: parsedPrice,
+        realizedGain: realizedGain ? parseFloat(realizedGain) : undefined,
+        title: title.trim() || undefined,
+        note: note.trim() || undefined,
+      });
+
+      setIsConfirmOpen(false);
+      onSuccess();
+    } catch (err: any) {
+      setErrorMessage('Failed to register asset sale: ' + err.message);
+      setIsConfirmOpen(false);
+    }
   };
 
   const selectedHolding = holdings.find((h) => h.id === holdingId);
@@ -226,6 +242,16 @@ export const AssetSellForm: React.FC<AssetSellFormProps> = ({
         selectedDate={date}
         onSelect={(d) => setDate(d)}
         title="Sale Date"
+      />
+
+      <ConfirmActionSheet
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        title="Confirm asset sell"
+        message="This will reduce the selected holding and increase the destination account balance."
+        confirmLabel="Confirm Sell"
+        variant="warning"
+        onConfirm={handleConfirmSell}
       />
     </>
   );
