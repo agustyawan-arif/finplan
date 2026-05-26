@@ -176,7 +176,7 @@ export const AccountDetailSheet: React.FC<AccountDetailSheetProps> = ({
               <div className="space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-rose-800 block">Deactivation Barred</span>
                 <p className="text-[10px] text-rose-700 leading-snug">
-                  This account has active child pockets: **{activeChildren.map(c => c.name).join(', ')}**. 
+                  This account has active child pockets: <strong className="font-bold">{activeChildren.map(c => c.name).join(', ')}</strong>. 
                   Please deactivate or re-parent them before deactivating Superbank.
                 </p>
               </div>

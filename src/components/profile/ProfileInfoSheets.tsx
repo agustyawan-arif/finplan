@@ -228,7 +228,7 @@ export const AboutPockitContent: React.FC = () => {
           <div className="space-y-1">
             <span className="text-xs font-bold text-[#0b1c30] block leading-tight">Database Safeguards</span>
             <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
-              We exclusively use **Supabase Auth** with strict PostgreSQL **Row-Level Security (RLS)** constraints. Only the logged-in owner can perform actions or read their own financial rows.
+              We exclusively use <strong className="font-bold text-slate-700">Supabase Auth</strong> with strict PostgreSQL <strong className="font-bold text-slate-700">Row-Level Security (RLS)</strong> constraints. Only the logged-in owner can perform actions or read their own financial rows.
             </p>
           </div>
         </div>
