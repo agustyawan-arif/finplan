@@ -9,6 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://pockit-finance.vercel.app"),
   title: {
     default: `${APP_CONFIG.appName} — ${APP_CONFIG.appLabel}`,
     template: `%s | ${APP_CONFIG.appName}`,
@@ -17,6 +18,8 @@ export const metadata: Metadata = {
   openGraph: {
     title: APP_CONFIG.appName,
     description: "Track budgets, accounts, investments, and net worth in one personal finance app.",
+    url: "https://pockit-finance.vercel.app",
+    siteName: APP_CONFIG.appName,
     images: [
       {
         url: "/og-image.png",
