@@ -158,8 +158,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
           data = await API.fetchAllFinanceData(userId); // reload
         }
 
+        let rawCategories = data.categories;
+        const canonicalCat = new Map<string, string>(); 
+        const uniqueCategories: Category[] = [];
+
+        // 1. Process parents
+        for (const c of rawCategories) {
+          if (!c.parentCategoryId) {
+            const key = `${c.name}-${c.kind}`;
+            if (!canonicalCat.has(key)) {
+              canonicalCat.set(key, c.id);
+              uniqueCategories.push(c);
+            }
+          }
+        }
+
+        // 2. Process children
+        for (const c of rawCategories) {
+          if (c.parentCategoryId) {
+            const parent = rawCategories.find((p) => p.id === c.parentCategoryId);
+            if (parent) {
+              const pKey = `${parent.name}-${parent.kind}`;
+              const canonicalId = canonicalCat.get(pKey);
+              if (canonicalId) {
+                const childCopy = { ...c, parentCategoryId: canonicalId };
+                const cKey = `${childCopy.name}-${childCopy.kind}-${canonicalId}`;
+                if (!canonicalCat.has(cKey)) {
+                  canonicalCat.set(cKey, childCopy.id);
+                  uniqueCategories.push(childCopy);
+                }
+              }
+            }
+          }
+        }
+
         setAccounts(data.accounts);
-        setCategories(data.categories);
+        setCategories(uniqueCategories);
         setBudgets(data.budgets);
         setTransactions(data.transactions);
         setHoldings(data.holdings);

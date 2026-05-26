@@ -192,7 +192,8 @@ export const AccountSelectorBottomSheet: React.FC<AccountSelectorProps> = ({
 interface CategorySelectorProps extends BaseSelectorProps {
   selectedId: string;
   onSelect: (category: Category) => void;
-  kind?: 'expense' | 'income';
+  kind?: 'expense' | 'income' | 'allocation';
+  isBudgetSelector?: boolean;
 }
 
 export const CategorySelectorBottomSheet: React.FC<CategorySelectorProps> = ({
@@ -202,6 +203,7 @@ export const CategorySelectorBottomSheet: React.FC<CategorySelectorProps> = ({
   selectedId,
   onSelect,
   kind,
+  isBudgetSelector,
 }) => {
   const { categories } = useApp();
   const [search, setSearch] = useState('');
@@ -211,11 +213,15 @@ export const CategorySelectorBottomSheet: React.FC<CategorySelectorProps> = ({
   // Filter categories
   const filteredCategories = categories.filter((c) => {
     if (kind && c.kind !== kind) return false;
+    
+    // For budget goals, we hide income categories and only show budgetable parents
+    if (isBudgetSelector && c.kind === 'income') return false;
+
     if (search.trim() === '') return true;
     return c.name.toLowerCase().includes(search.toLowerCase());
   });
 
-  // Root level categories (e.g. Needs, Wants, Charity, Saving, Income groups)
+  // Root level categories
   const rootCategories = filteredCategories.filter((c) => !c.parentCategoryId);
 
   return (
@@ -478,9 +484,125 @@ export const HoldingSelectorBottomSheet: React.FC<HoldingSelectorProps> = ({
             );
           })}
 
-          {filteredHoldings.length === 0 && (
+            {filteredHoldings.length === 0 && (
             <div className="text-center py-10 text-[10px] font-bold text-slate-400">
               No matching holdings found.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. Generic Selector Bottom Sheet
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface SelectorOption {
+  id: string;
+  label: string;
+  subtitle?: string;
+}
+
+interface GenericSelectorProps extends BaseSelectorProps {
+  options: SelectorOption[];
+  selectedId: string;
+  onSelect: (id: string) => void;
+}
+
+export const GenericSelectorBottomSheet: React.FC<GenericSelectorProps> = ({
+  isOpen,
+  onClose,
+  title,
+  options,
+  selectedId,
+  onSelect,
+}) => {
+  const [search, setSearch] = useState('');
+
+  if (!isOpen) return null;
+
+  const filteredOptions = options.filter((o) => {
+    if (search.trim() === '') return true;
+    return (
+      o.label.toLowerCase().includes(search.toLowerCase()) ||
+      (o.subtitle || '').toLowerCase().includes(search.toLowerCase())
+    );
+  });
+
+  return (
+    <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-xs z-50 flex flex-col justify-end transition-all duration-300">
+      {/* Backdrop tap to close */}
+      <div className="flex-1" onClick={onClose} />
+
+      {/* Drawer */}
+      <div className="bg-white rounded-t-[32px] shadow-ambient-lg flex flex-col max-h-[85%] overflow-hidden animate-slide-up pb-6">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-slate-100 shrink-0">
+          <h3 className="text-sm font-black text-[#0b1c30] tracking-tight">{title}</h3>
+          <button onClick={onClose} className="p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500">
+            <X size={15} />
+          </button>
+        </div>
+
+        {/* Search */}
+        {options.length > 8 && (
+          <div className="px-6 pt-4 pb-2 shrink-0">
+            <div className="relative flex items-center bg-slate-50 border border-slate-100 rounded-2xl px-3 py-2.5">
+              <Search size={14} className="text-slate-400 mr-2 shrink-0" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="bg-transparent text-xs text-slate-700 outline-none w-full font-semibold placeholder:text-slate-400"
+              />
+              {search && (
+                <button onClick={() => setSearch('')} className="p-0.5 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-500">
+                  <X size={10} />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Scroll List */}
+        <div className="flex-1 overflow-y-auto px-6 py-2 space-y-2 no-scrollbar">
+          {filteredOptions.map((opt) => {
+            const isSelected = opt.id === selectedId;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => {
+                  onSelect(opt.id);
+                  onClose();
+                }}
+                className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all active:scale-[0.99] select-none
+                  ${
+                    isSelected
+                      ? 'bg-[#0f172a] border-[#0f172a] text-white shadow-sm'
+                      : 'bg-slate-50 border-slate-100 hover:bg-slate-100 text-slate-800'
+                  }`}
+              >
+                <div className="min-w-0">
+                  <span className="text-xs font-extrabold block truncate leading-tight">
+                    {opt.label}
+                  </span>
+                  {opt.subtitle && (
+                    <span className={`text-[9px] font-bold uppercase tracking-wider block mt-0.5 ${isSelected ? 'text-slate-400' : 'text-slate-400'}`}>
+                      {opt.subtitle}
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+
+          {filteredOptions.length === 0 && (
+            <div className="text-center py-10 text-[10px] font-bold text-slate-400">
+              No matching options found.
             </div>
           )}
         </div>

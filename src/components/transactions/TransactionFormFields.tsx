@@ -80,24 +80,7 @@ export const FormTextarea: React.FC<FormTextareaProps> = ({ label, id, ...props 
   </div>
 );
 
-// Standard Styled Select Dropdown
-interface FormSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
-  label: string;
-  children: React.ReactNode;
-}
 
-export const FormSelect: React.FC<FormSelectProps> = ({ label, id, children, ...props }) => (
-  <div className="space-y-1">
-    <FormLabel htmlFor={id}>{label}</FormLabel>
-    <select
-      id={id}
-      className="w-full px-4 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs font-semibold text-slate-700 outline-none transition-all focus:border-[#0f172a] focus:ring-1 focus:ring-[#0f172a] capitalize cursor-pointer"
-      {...props}
-    >
-      {children}
-    </select>
-  </div>
-);
 
 // Premium Form Submit Button (Deep Navy card styling)
 interface SubmitButtonProps {

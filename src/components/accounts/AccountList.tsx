@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Eye, EyeOff, FolderPlus, Layers, Globe } from 'lucide-react';
+import { Plus, Eye, EyeOff, FolderPlus, Layers, Globe, MoreHorizontal } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Account } from '../../types/finance';
 import { AccountGroup } from './AccountGroup';
@@ -16,6 +16,7 @@ export const AccountList: React.FC = () => {
   const [isFXOpen, setIsFXOpen] = useState(false);
   const [accountToEdit, setAccountToEdit] = useState<Account | null>(null);
   const [showInactive, setShowInactive] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
   // Group accounts reactively based on active/inactive states and types
   const categorized = useMemo(() => {
@@ -97,34 +98,19 @@ export const AccountList: React.FC = () => {
         </div>
 
         {/* Filter controls and add action trigger */}
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 mt-2">
           <button
-            onClick={() => setShowInactive(!showInactive)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
-              showInactive
-                ? 'bg-secondary/10 border-secondary/20 text-secondary'
-                : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
-            }`}
+            onClick={handleAddClick}
+            className="flex-1 flex items-center justify-center gap-1.5 bg-[#0F172A] hover:bg-[#1e293b] text-white px-4 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-[0.98] shadow-sm"
           >
-            {showInactive ? <EyeOff size={13} /> : <Eye size={13} />}
-            {showInactive ? 'Hide Inactive' : 'Show Inactive'}
+            <FolderPlus size={16} /> Add Account
           </button>
-
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => setIsFXOpen(true)}
-              className="flex items-center gap-1 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 shadow-sm"
-            >
-              <Globe size={13} /> Adjust FX Rates
-            </button>
-
-            <button
-              onClick={handleAddClick}
-              className="flex items-center gap-1 bg-[#0F172A] hover:bg-[#1e293b] text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 shadow-sm"
-            >
-              <FolderPlus size={13} /> Add Account
-            </button>
-          </div>
+          <button
+            onClick={() => setIsMoreMenuOpen(true)}
+            className="flex items-center justify-center bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 w-[42px] h-[42px] rounded-xl transition-all active:scale-[0.98] shadow-sm shrink-0"
+          >
+            <MoreHorizontal size={18} />
+          </button>
         </div>
       </div>
 
@@ -228,6 +214,61 @@ export const AccountList: React.FC = () => {
             </div>
             <div className="flex-1 overflow-y-auto no-scrollbar px-6 py-4">
               <ExchangeRateForm onSuccess={() => setIsFXOpen(false)} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* More Actions bottom sheet form */}
+      {isMoreMenuOpen && (
+        <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-xs z-50 flex flex-col justify-end transition-all duration-300">
+          <div className="flex-1" onClick={() => setIsMoreMenuOpen(false)} />
+          <div className="bg-white rounded-t-[32px] shadow-ambient-lg flex flex-col max-h-[90%] overflow-hidden animate-slide-up pb-8">
+            <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-slate-100 bg-white shrink-0">
+              <h2 className="text-base font-bold text-[#0b1c30] tracking-tight">More Actions</h2>
+              <button
+                onClick={() => setIsMoreMenuOpen(false)}
+                className="p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors text-slate-500"
+              >
+                <Plus size={16} className="rotate-45" />
+              </button>
+            </div>
+            <div className="px-6 py-4 space-y-3 overflow-y-auto no-scrollbar">
+              <button
+                onClick={() => {
+                  setShowInactive(!showInactive);
+                  setIsMoreMenuOpen(false);
+                }}
+                className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-2xl transition-all active:scale-[0.98]"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-600 shrink-0">
+                    {showInactive ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </div>
+                  <div className="text-left">
+                    <span className="block text-sm font-bold text-slate-800">{showInactive ? 'Hide Inactive Accounts' : 'Show Inactive Accounts'}</span>
+                    <span className="block text-[10px] font-semibold text-slate-400 mt-0.5">{showInactive ? 'Hide closed or deactivated accounts' : 'View closed or deactivated accounts'}</span>
+                  </div>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsFXOpen(true);
+                  setIsMoreMenuOpen(false);
+                }}
+                className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-2xl transition-all active:scale-[0.98]"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-600 shrink-0">
+                    <Globe size={18} />
+                  </div>
+                  <div className="text-left">
+                    <span className="block text-sm font-bold text-slate-800">Adjust FX Rates</span>
+                    <span className="block text-[10px] font-semibold text-slate-400 mt-0.5">Update manual foreign exchange rates</span>
+                  </div>
+                </div>
+              </button>
             </div>
           </div>
         </div>

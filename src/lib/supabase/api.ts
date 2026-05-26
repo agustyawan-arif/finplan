@@ -49,6 +49,12 @@ export async function fetchAllFinanceData(userId: string) {
 }
 
 export async function seedDefaultCategories(userId: string): Promise<Category[]> {
+  // Defensive check: prevent double seeding if categories already exist
+  const { data: existing } = await supabase.from('categories').select('id').eq('user_id', userId).limit(1);
+  if (existing && existing.length > 0) {
+    return [];
+  }
+
   const parentDefaults = [
     { name: 'Needs', kind: 'expense', budget_behavior: 'expense', parent_category_id: null, sort_order: 10 },
     { name: 'Wants', kind: 'expense', budget_behavior: 'expense', parent_category_id: null, sort_order: 20 },

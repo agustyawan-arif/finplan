@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Account, AccountType, AccountPurpose, CurrencyCode } from '../../types/finance';
-import { FormInput, FormSelect, FormTextarea, SubmitButton } from '../transactions/TransactionFormFields';
+import { FormInput, FormTextarea, SubmitButton, FormPickerTrigger } from '../transactions/TransactionFormFields';
+import { GenericSelectorBottomSheet, AccountSelectorBottomSheet } from '../transactions/SelectorBottomSheet';
 
 interface AccountFormProps {
   onSuccess: () => void;
@@ -20,6 +21,37 @@ export const AccountForm: React.FC<AccountFormProps> = ({ onSuccess, accountToEd
   const [initialBalance, setInitialBalance] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [warningMessage, setWarningMessage] = useState('');
+
+  const [isTypeSheetOpen, setIsTypeSheetOpen] = useState(false);
+  const [isCurrencySheetOpen, setIsCurrencySheetOpen] = useState(false);
+  const [isPurposeSheetOpen, setIsPurposeSheetOpen] = useState(false);
+  const [isParentSheetOpen, setIsParentSheetOpen] = useState(false);
+
+  const typeOptions = [
+    { id: 'bank', label: 'Bank Account' },
+    { id: 'cash', label: 'Cash vault / pocket' },
+    { id: 'e_wallet', label: 'E-wallet' },
+    { id: 'pocket', label: 'Saving pocket / envelope' },
+    { id: 'deposit', label: 'Deposit certificate' },
+    { id: 'investment', label: 'Investment wallet' },
+  ];
+
+  const currencyOptions = [
+    { id: 'IDR', label: 'IDR (Rupiah)' },
+    { id: 'SGD', label: 'SGD (Singapore Dollar)' },
+    { id: 'USD', label: 'USD (US Dollar)' },
+  ];
+
+  const purposeOptions = [
+    { id: 'daily_spending', label: 'Daily spendings / payouts' },
+    { id: 'saving', label: 'Future general savings' },
+    { id: 'emergency_fund', label: 'Emergency reserves' },
+    { id: 'travel_fund', label: 'Travel & vacation' },
+    { id: 'bill_payment', label: 'Monthly bill allocations' },
+    { id: 'investment', label: 'Investments & capital growth' },
+    { id: 'deposit', label: 'Fixed deposit certificate' },
+    { id: 'other', label: 'Other purposes' },
+  ];
 
   // Sync edits if editing existing account
   useEffect(() => {
@@ -128,45 +160,32 @@ export const AccountForm: React.FC<AccountFormProps> = ({ onSuccess, accountToEd
           onChange={(e) => setInstitution(e.target.value)}
         />
 
-        <FormSelect label="Account Type" value={type} onChange={(e) => setType(e.target.value as AccountType)} required>
-          <option value="bank">Bank Account</option>
-          <option value="cash">Cash vault / pocket</option>
-          <option value="e_wallet">E-wallet</option>
-          <option value="pocket">Saving pocket / envelope</option>
-          <option value="deposit">Deposit certificate</option>
-          <option value="investment">Investment wallet</option>
-        </FormSelect>
+        <div className="grid grid-cols-2 gap-2">
+          <FormPickerTrigger
+            label="Account Type"
+            valueText={typeOptions.find(o => o.id === type)?.label || 'Select...'}
+            onClick={() => setIsTypeSheetOpen(true)}
+          />
+          <FormPickerTrigger
+            label="Currency"
+            valueText={currencyOptions.find(o => o.id === currency)?.label || 'Select...'}
+            onClick={() => setIsCurrencySheetOpen(true)}
+          />
+        </div>
 
-        <FormSelect label="Currency" value={currency} onChange={(e) => setCurrency(e.target.value as CurrencyCode)} required>
-          <option value="IDR">IDR (Rupiah)</option>
-          <option value="SGD">SGD (Singapore Dollar)</option>
-          <option value="USD">USD (US Dollar)</option>
-        </FormSelect>
-
-        <FormSelect label="Financial Purpose" value={purpose} onChange={(e) => setPurpose(e.target.value as AccountPurpose)} required>
-          <option value="daily_spending">Daily spendings / payouts</option>
-          <option value="saving">Future general savings</option>
-          <option value="emergency_fund">Emergency reserves</option>
-          <option value="travel_fund">Travel & vacation</option>
-          <option value="bill_payment">Monthly bill allocations</option>
-          <option value="investment">Investments & capital growth</option>
-          <option value="deposit">Fixed deposit certificate</option>
-          <option value="other">Other purposes</option>
-        </FormSelect>
+        <FormPickerTrigger
+          label="Financial Purpose"
+          valueText={purposeOptions.find(o => o.id === purpose)?.label || 'Select...'}
+          onClick={() => setIsPurposeSheetOpen(true)}
+        />
 
         {type === 'pocket' && (
-          <FormSelect
-            label="Parent Bank Account (Recommended)"
-            value={parentAccountId}
-            onChange={(e) => setParentAccountId(e.target.value)}
-          >
-            <option value="">No Parent Bank Account</option>
-            {activeParentCandidates.map((acc) => (
-              <option key={acc.id} value={acc.id}>
-                {acc.name} ({acc.institution})
-              </option>
-            ))}
-          </FormSelect>
+          <FormPickerTrigger
+            label="Parent Bank Account"
+            valueText={parentAccountId ? (accounts.find(a => a.id === parentAccountId)?.name || 'Select...') : 'No Parent Bank Account'}
+            subtitleText="(Recommended)"
+            onClick={() => setIsParentSheetOpen(true)}
+          />
         )}
 
         <FormInput
@@ -180,6 +199,42 @@ export const AccountForm: React.FC<AccountFormProps> = ({ onSuccess, accountToEd
       </div>
 
       <SubmitButton>{accountToEdit ? 'Save Changes' : 'Create Account'}</SubmitButton>
+
+      <GenericSelectorBottomSheet
+        isOpen={isTypeSheetOpen}
+        onClose={() => setIsTypeSheetOpen(false)}
+        title="Select Account Type"
+        options={typeOptions}
+        selectedId={type}
+        onSelect={(id) => setType(id as AccountType)}
+      />
+
+      <GenericSelectorBottomSheet
+        isOpen={isCurrencySheetOpen}
+        onClose={() => setIsCurrencySheetOpen(false)}
+        title="Select Currency"
+        options={currencyOptions}
+        selectedId={currency}
+        onSelect={(id) => setCurrency(id as CurrencyCode)}
+      />
+
+      <GenericSelectorBottomSheet
+        isOpen={isPurposeSheetOpen}
+        onClose={() => setIsPurposeSheetOpen(false)}
+        title="Select Financial Purpose"
+        options={purposeOptions}
+        selectedId={purpose}
+        onSelect={(id) => setPurpose(id as AccountPurpose)}
+      />
+
+      <AccountSelectorBottomSheet
+        isOpen={isParentSheetOpen}
+        onClose={() => setIsParentSheetOpen(false)}
+        title="Select Parent Bank Account"
+        selectedId={parentAccountId}
+        onSelect={(acc) => setParentAccountId(acc.id)}
+        allowedTypes={['bank']}
+      />
     </form>
   );
 };
