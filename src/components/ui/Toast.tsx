@@ -22,23 +22,19 @@ export const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
   const config = {
     success: {
       icon: CheckCircle2,
-      iconClass: 'text-emerald-500',
-      borderClass: 'border-emerald-500/15',
+      iconClass: 'text-[#6cf8bb]', // Secondary Container light positive green
     },
     error: {
       icon: AlertCircle,
-      iconClass: 'text-rose-500',
-      borderClass: 'border-rose-500/15',
+      iconClass: 'text-rose-400', // Destructive rose warning
     },
     warning: {
       icon: AlertTriangle,
-      iconClass: 'text-amber-500',
-      borderClass: 'border-amber-500/15',
+      iconClass: 'text-amber-400', // Amber warning
     },
     info: {
       icon: Info,
-      iconClass: 'text-slate-500',
-      borderClass: 'border-slate-500/15',
+      iconClass: 'text-sky-400', // Info blue
     },
   }[type];
 
@@ -46,17 +42,17 @@ export const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
 
   return (
     <div 
-      className={`w-full max-w-[340px] mx-auto bg-white/95 backdrop-blur-md border ${config.borderClass} shadow-ambient-lg rounded-2xl p-4 flex items-center justify-between pointer-events-auto animate-slide-down transition-all duration-300 select-none`}
+      className="w-full max-w-[342px] mx-auto bg-[#0b1c30]/98 backdrop-blur-md border border-[#213145]/80 shadow-[0_12px_40px_rgba(0,0,0,0.22)] rounded-2xl p-4 flex items-center justify-between pointer-events-auto animate-slide-down transition-all duration-300 select-none"
     >
       <div className="flex items-center gap-3">
         <IconComponent size={18} className={`${config.iconClass} shrink-0`} />
-        <span className="text-xs font-semibold text-[#0b1c30] leading-snug">
+        <span className="text-xs font-semibold text-[#eaf1ff] leading-snug">
           {message}
         </span>
       </div>
       <button 
         onClick={onClose}
-        className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-50 transition-colors cursor-pointer shrink-0 ml-2"
+        className="text-white/40 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors cursor-pointer shrink-0 ml-2"
         aria-label="Close notification"
       >
         <X size={14} />
