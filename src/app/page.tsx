@@ -26,6 +26,8 @@ import {
 import { Session } from '@supabase/supabase-js';
 import { ConfirmActionSheet } from '../components/ui/ConfirmActionSheet';
 import { PullToRefresh } from '../components/ui/PullToRefresh';
+import { ToastProvider, ToastContainer } from '../components/ui/ToastProvider';
+import { useToast } from '../hooks/useToast';
 
 const generateMonths = (): string[] => {
   const months: string[] = [];
@@ -42,6 +44,7 @@ const MONTHS = generateMonths();
 
 function MainAppContent({ session }: { session: Session | null }) {
   const { activeTab, setActiveTab, globalMonth, setGlobalMonth, isLoadingData, refreshData } = useApp();
+  const { showSuccess } = useToast();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
@@ -334,8 +337,14 @@ function MainAppContent({ session }: { session: Session | null }) {
         confirmLabel="Log out"
         variant="destructive"
         onConfirm={async () => {
-          await supabase.auth.signOut();
-          setIsLogoutConfirmOpen(false);
+          try {
+            await supabase.auth.signOut();
+            showSuccess('Logged out successfully');
+          } catch (err) {
+            console.error('Failed to log out:', err);
+          } finally {
+            setIsLogoutConfirmOpen(false);
+          }
         }}
       />
     </div>
@@ -404,10 +413,13 @@ export default function HomeView() {
   }
 
   return (
-    <AppProvider userId={session?.user?.id}>
-      <IPhoneShell>
-        {!session ? <AuthScreen /> : <MainAppContent session={session} />}
-      </IPhoneShell>
-    </AppProvider>
+    <ToastProvider>
+      <AppProvider userId={session?.user?.id}>
+        <IPhoneShell>
+          <ToastContainer />
+          {!session ? <AuthScreen /> : <MainAppContent session={session} />}
+        </IPhoneShell>
+      </AppProvider>
+    </ToastProvider>
   );
 }

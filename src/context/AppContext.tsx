@@ -21,6 +21,7 @@ import {
   convertCurrencyToBase,
 } from '../lib/finance/calculations';
 import * as API from '../lib/supabase/api';
+import { useToast } from '../hooks/useToast';
 
 interface AppContextType {
   accounts: Account[];
@@ -123,6 +124,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string }> = ({ children, userId }) => {
+  const { showSuccess, showError } = useToast();
   const [activeTab, setActiveTab] = useState<'home' | 'transactions' | 'budget' | 'accounts' | 'reports'>('home');
   const [globalMonth, setGlobalMonth] = useState('2026-05');
   
@@ -190,7 +192,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
       setExchangeRates(data.exchangeRates);
     } catch (err: any) {
       console.error('Failed to load finance data', err);
-      alert('Failed to load finance data from server: ' + err.message);
+      showError('Failed to load finance data. Please check your connection.');
     } finally {
       setIsLoadingData(false);
     }
@@ -371,15 +373,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
     };
   };
 
-  // Transactions CRUD
   const addTransaction = async (tData: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (!userId) return;
     try {
       const newTx = await API.insertTransaction(tData, userId);
       setTransactions((prev) => [newTx, ...prev]);
+
+      let successMsg = 'Transaction recorded';
+      if (tData.type === 'expense') successMsg = 'Expense added';
+      else if (tData.type === 'income') successMsg = 'Income added';
+      else if (tData.type === 'transfer') successMsg = 'Transfer added';
+      else if (tData.type === 'adjustment') successMsg = 'Adjustment added';
+      else if (tData.type === 'asset_buy') successMsg = 'Asset buy recorded';
+      else if (tData.type === 'asset_sell') successMsg = 'Asset sell recorded';
+      else if (tData.type === 'asset_value_update') successMsg = 'Asset value updated';
+
+      showSuccess(successMsg);
     } catch (err: any) {
       console.error(err);
-      alert('Failed to add transaction: ' + err.message);
+      showError('Couldn’t save transaction. Please try again.');
     }
   };
 
@@ -388,9 +400,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
     try {
       await API.deleteTransactionRecord(id);
       setTransactions((prev) => prev.filter((t) => t.id !== id));
+      showSuccess('Transaction deleted');
     } catch (err: any) {
       console.error(err);
-      alert('Failed to delete transaction: ' + err.message);
+      showError('Couldn’t delete transaction. Please try again.');
     }
   };
 
@@ -420,9 +433,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
     try {
       const newAcc = await API.insertAccount(input, userId);
       setAccounts((prev) => [...prev, newAcc]);
+      showSuccess('Account created');
     } catch (err: any) {
       console.error(err);
-      alert('Failed to add account: ' + err.message);
+      showError('Couldn’t create account. Please check your connection.');
     }
   };
 
@@ -431,9 +445,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
     try {
       const updatedAcc = await API.updateAccountRecord(accountId, input);
       setAccounts((prev) => prev.map((acc) => (acc.id === accountId ? updatedAcc : acc)));
+      showSuccess('Account updated');
     } catch (err: any) {
       console.error(err);
-      alert('Failed to update account: ' + err.message);
+      showError('Couldn’t update account. Please try again.');
     }
   };
 
@@ -442,9 +457,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
     try {
       const updatedAcc = await API.updateAccountRecord(accountId, { isActive: false });
       setAccounts((prev) => prev.map((acc) => (acc.id === accountId ? updatedAcc : acc)));
+      showSuccess('Account deactivated');
     } catch (err: any) {
       console.error(err);
-      alert('Failed to deactivate account: ' + err.message);
+      showError('Couldn’t deactivate account. Please try again.');
     }
   };
 
@@ -454,12 +470,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
     try {
       const newBudget = await API.insertBudget(input, userId);
       setBudgets((prev) => [...prev, newBudget]);
+      showSuccess('Budget goal created');
     } catch (err: any) {
       console.error(err);
-      if (err.code === '23505') { // Postgres unique violation code usually
-        alert('A budget for this category and month already exists.');
+      if (err.code === '23505') {
+        showError('Budget already exists for this category and month.');
       } else {
-        alert('Failed to add budget: ' + err.message);
+        showError('Couldn’t create budget. Please try again.');
       }
     }
   };
@@ -469,9 +486,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
     try {
       const updatedBudget = await API.updateBudgetRecord(budgetId, input);
       setBudgets((prev) => prev.map((b) => (b.id === budgetId ? updatedBudget : b)));
+      showSuccess('Budget goal updated');
     } catch (err: any) {
       console.error(err);
-      alert('Failed to update budget: ' + err.message);
+      showError('Couldn’t update budget. Please try again.');
     }
   };
 
@@ -480,9 +498,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
     try {
       await API.deleteBudgetRecord(budgetId);
       setBudgets((prev) => prev.filter((b) => b.id !== budgetId));
+      showSuccess('Budget goal removed');
     } catch (err: any) {
       console.error(err);
-      alert('Failed to delete budget: ' + err.message);
+      showError('Couldn’t remove budget. Please try again.');
     }
   };
 
@@ -492,9 +511,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
     try {
       const newHolding = await API.insertHolding(input, userId);
       setHoldings((prev) => [...prev, newHolding]);
+      showSuccess('Holding created');
     } catch (err: any) {
       console.error(err);
-      alert('Failed to add holding: ' + err.message);
+      showError('Couldn’t create holding. Please try again.');
     }
   };
 
@@ -503,9 +523,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
     try {
       const updatedHolding = await API.updateHoldingRecord(holdingId, input);
       setHoldings((prev) => prev.map((h) => (h.id === holdingId ? updatedHolding : h)));
+      
+      if (input.status === 'sold') {
+        showSuccess('Holding closed');
+      } else {
+        showSuccess('Holding updated');
+      }
     } catch (err: any) {
       console.error(err);
-      alert('Failed to update holding: ' + err.message);
+      showError('Couldn’t update holding. Please try again.');
     }
   };
 
@@ -515,9 +541,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
     try {
       const newValuation = await API.insertAssetValuation(input, userId);
       setValuations((prev) => [newValuation, ...prev]);
+      showSuccess('Asset value updated');
     } catch (err: any) {
       console.error(err);
-      alert('Failed to add valuation: ' + err.message);
+      showError('Couldn’t update asset value. Please try again.');
     }
   };
 
@@ -531,9 +558,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
         );
         return [...filtered, newRate];
       });
+      showSuccess('Exchange rate updated');
     } catch (err: any) {
       console.error(err);
-      alert('Failed to add exchange rate: ' + err.message);
+      showError('Couldn’t save exchange rate. Please try again.');
     }
   };
 
@@ -542,9 +570,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
     try {
       const updatedRate = await API.updateExchangeRateRecord(rateId, input);
       setExchangeRates((prev) => prev.map((er) => (er.id === rateId ? updatedRate : er)));
+      showSuccess('Exchange rate updated');
     } catch (err: any) {
       console.error(err);
-      alert('Failed to update exchange rate: ' + err.message);
+      showError('Couldn’t update exchange rate. Please try again.');
     }
   };
 
@@ -665,7 +694,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
       });
     } catch (err: any) {
       console.error(err);
-      alert('Failed to update asset value: ' + err.message);
+      showError('Couldn’t update asset value. Please try again.');
     }
   };
 
