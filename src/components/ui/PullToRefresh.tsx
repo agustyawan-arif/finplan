@@ -136,19 +136,25 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
   return (
     <div 
       ref={containerRef} 
-      className="flex-1 flex flex-col overflow-y-auto no-scrollbar relative select-none h-full"
+      className="flex-1 w-full flex flex-col overflow-y-auto no-scrollbar relative select-none h-full"
     >
       {/* Loading Spinner Header (Instagram Style Glassmorphic Indicator) */}
-      {/* perfectly centered using flexbox (left-0 right-0 justify-center) */}
+      {/* perfectly centered using a full-width container with flex justify-center */}
       <div 
-        className="absolute top-4 left-0 right-0 z-40 pointer-events-none flex justify-center transition-all duration-300"
+        className="absolute top-4 left-0 right-0 flex justify-center z-40 pointer-events-none transition-all duration-300"
         style={{
           opacity: pullDistance > 10 || refreshing ? 1 : 0,
-          transform: `translateY(${pullDistance - 40}px) scale(${0.6 + pullProgress * 0.4})`,
+          transform: `translateY(${pullDistance - 40}px)`,
           transition: activePulling ? 'none' : 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.2s'
         }}
       >
-        <div className="w-9 h-9 rounded-full bg-white/80 backdrop-blur-md border border-slate-100/60 shadow-ambient flex items-center justify-center text-slate-800">
+        <div 
+          className="w-9 h-9 rounded-full bg-white/80 backdrop-blur-md border border-slate-100/60 shadow-ambient flex items-center justify-center text-slate-800 transition-all duration-300"
+          style={{
+            transform: `scale(${0.6 + pullProgress * 0.4})`,
+            transition: activePulling ? 'none' : 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)'
+          }}
+        >
           <Loader2 
             size={18} 
             className={`${rotation}`}
