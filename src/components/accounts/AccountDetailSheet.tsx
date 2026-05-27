@@ -352,7 +352,7 @@ export const AccountDetailSheet: React.FC<AccountDetailSheetProps> = ({
               </button>
             </div>
             <div className="flex-1 overflow-y-auto no-scrollbar px-6 py-4">
-              <HoldingForm onSuccess={() => setIsHoldingFormOpen(false)} holdingToEdit={null} />
+              <HoldingForm onSuccess={() => setIsHoldingFormOpen(false)} holdingToEdit={null} defaultAccountId={account.id} />
             </div>
           </div>
         </div>

@@ -7,12 +7,13 @@ import { AssetType, CurrencyCode, HoldingStatus } from '../../types/finance';
 interface HoldingFormProps {
   onSuccess: () => void;
   holdingToEdit?: any;
+  defaultAccountId?: string;
 }
 
-export const HoldingForm: React.FC<HoldingFormProps> = ({ onSuccess, holdingToEdit }) => {
+export const HoldingForm: React.FC<HoldingFormProps> = ({ onSuccess, holdingToEdit, defaultAccountId }) => {
   const { accounts, addHolding, updateHolding } = useApp();
 
-  const [accountId, setAccountId] = useState(holdingToEdit ? holdingToEdit.accountId : '');
+  const [accountId, setAccountId] = useState(holdingToEdit ? holdingToEdit.accountId : (defaultAccountId || ''));
   const [name, setName] = useState(holdingToEdit ? holdingToEdit.name : '');
   const [assetType, setAssetType] = useState<AssetType>(holdingToEdit ? holdingToEdit.assetType : 'stock');
   const [symbol, setSymbol] = useState(holdingToEdit ? holdingToEdit.symbol || '' : '');
