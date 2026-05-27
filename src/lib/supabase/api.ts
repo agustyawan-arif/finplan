@@ -70,20 +70,18 @@ export async function seedDefaultCategories(userId: string): Promise<Category[]>
 
   const childrenDefaults = [
     // Needs Children
-    { name: 'Food', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Needs'), sort_order: 11 },
-    { name: 'Rent', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Needs'), sort_order: 12 },
-    { name: 'Transport', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Needs'), sort_order: 13 },
-    { name: 'Internet', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Needs'), sort_order: 14 },
-    { name: 'Laundry', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Needs'), sort_order: 15 },
-    { name: 'Health', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Needs'), sort_order: 16 },
+    { name: 'Rent', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Needs'), sort_order: 11 },
+    { name: 'Transport', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Needs'), sort_order: 12 },
+    { name: 'Health', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Needs'), sort_order: 13 },
+    { name: 'Utilities', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Needs'), sort_order: 14 },
+    { name: 'Food', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Needs'), sort_order: 15 },
+    { name: 'Pets', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Needs'), sort_order: 16 },
 
     // Wants Children
-    { name: 'Coffee', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Wants'), sort_order: 21 },
-    { name: 'Dating', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Wants'), sort_order: 22 },
-    { name: 'Hiking', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Wants'), sort_order: 23 },
-    { name: 'Trail Run', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Wants'), sort_order: 24 },
-    { name: 'Subscription', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Wants'), sort_order: 25 },
-    { name: 'Entertainment', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Wants'), sort_order: 26 },
+    { name: 'Food', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Wants'), sort_order: 21 },
+    { name: 'Entertainment', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Wants'), sort_order: 22 },
+    { name: 'Shopping', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Wants'), sort_order: 23 },
+    { name: 'Travel', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Wants'), sort_order: 24 },
 
     // Saving Children
     { name: 'Emergency Fund', kind: 'allocation', budget_behavior: 'allocation', parent_category_id: getParentId('Saving'), sort_order: 31 },
