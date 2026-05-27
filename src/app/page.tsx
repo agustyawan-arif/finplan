@@ -25,6 +25,7 @@ import {
 } from '../components/profile/ProfileInfoSheets';
 import { Session } from '@supabase/supabase-js';
 import { ConfirmActionSheet } from '../components/ui/ConfirmActionSheet';
+import { PullToRefresh } from '../components/ui/PullToRefresh';
 
 const generateMonths = (): string[] => {
   const months: string[] = [];
@@ -40,7 +41,8 @@ const generateMonths = (): string[] => {
 const MONTHS = generateMonths();
 
 function MainAppContent({ session }: { session: Session | null }) {
-  const { activeTab, setActiveTab, globalMonth, setGlobalMonth, isLoadingData } = useApp();
+  const { activeTab, setActiveTab, globalMonth, setGlobalMonth, isLoadingData, refreshData } = useApp();
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -56,6 +58,12 @@ function MainAppContent({ session }: { session: Session | null }) {
   const handleOpenDrawer = (type: TransactionType) => {
     setDrawerDefaultType(type);
     setIsDrawerOpen(true);
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refreshData(true); // silent refresh data from Supabase
+    setIsRefreshing(false);
   };
 
   if (!mounted) {
@@ -230,7 +238,9 @@ function MainAppContent({ session }: { session: Session | null }) {
 
       {/* Main Tab Screen Area */}
       {/* Finance data still uses local state until Milestone 9C */}
-      {renderTabContent()}
+      <PullToRefresh onRefresh={handleRefresh} isLoading={isRefreshing}>
+        {renderTabContent()}
+      </PullToRefresh>
 
       {/* iOS styled Bottom Tab Bar Navigation */}
       <nav className="absolute bottom-0 left-0 right-0 h-[calc(64px+env(safe-area-inset-bottom,0px))] bg-white/95 backdrop-blur-md border-t border-slate-100 flex items-center justify-around px-2 pb-[env(safe-area-inset-bottom,0px)] z-30 shadow-ambient-lg select-none">

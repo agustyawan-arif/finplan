@@ -31,6 +31,7 @@ interface AppContextType {
   exchangeRates: ExchangeRate[];
   valuations: AssetValuation[];
   isLoadingData: boolean;
+  refreshData: (silent?: boolean) => Promise<void>;
   activeTab: 'home' | 'transactions' | 'budget' | 'accounts' | 'reports';
   setActiveTab: (tab: 'home' | 'transactions' | 'budget' | 'accounts' | 'reports') => void;
   globalMonth: string;
@@ -134,6 +135,67 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
   const [exchangeRates, setExchangeRates] = useState<ExchangeRate[]>([]);
   const [valuations, setValuations] = useState<AssetValuation[]>([]);
 
+  const loadData = React.useCallback(async (silent = false) => {
+    if (!userId) return;
+    if (!silent) setIsLoadingData(true);
+    try {
+      let data = await API.fetchAllFinanceData(userId);
+      
+      if (data.categories.length === 0) {
+        // New user -> seed categories
+        await API.seedDefaultCategories(userId);
+        data = await API.fetchAllFinanceData(userId); // reload
+      }
+
+      let rawCategories = data.categories;
+      const canonicalCat = new Map<string, string>(); 
+      const uniqueCategories: Category[] = [];
+
+      // 1. Process parents
+      for (const c of rawCategories) {
+        if (!c.parentCategoryId) {
+          const key = `${c.name}-${c.kind}`;
+          if (!canonicalCat.has(key)) {
+            canonicalCat.set(key, c.id);
+            uniqueCategories.push(c);
+          }
+        }
+      }
+
+      // 2. Process children
+      for (const c of rawCategories) {
+        if (c.parentCategoryId) {
+          const parent = rawCategories.find((p) => p.id === c.parentCategoryId);
+          if (parent) {
+            const pKey = `${parent.name}-${parent.kind}`;
+            const canonicalId = canonicalCat.get(pKey);
+            if (canonicalId) {
+              const childCopy = { ...c, parentCategoryId: canonicalId };
+              const cKey = `${childCopy.name}-${childCopy.kind}-${canonicalId}`;
+              if (!canonicalCat.has(cKey)) {
+                canonicalCat.set(cKey, childCopy.id);
+                uniqueCategories.push(childCopy);
+              }
+            }
+          }
+        }
+      }
+
+      setAccounts(data.accounts);
+      setCategories(uniqueCategories);
+      setBudgets(data.budgets);
+      setTransactions(data.transactions);
+      setHoldings(data.holdings);
+      setValuations(data.valuations);
+      setExchangeRates(data.exchangeRates);
+    } catch (err: any) {
+      console.error('Failed to load finance data', err);
+      alert('Failed to load finance data from server: ' + err.message);
+    } finally {
+      setIsLoadingData(false);
+    }
+  }, [userId]);
+
   React.useEffect(() => {
     if (!userId) {
       setAccounts([]);
@@ -146,69 +208,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
       setIsLoadingData(false);
       return;
     }
-
-    const loadData = async () => {
-      setIsLoadingData(true);
-      try {
-        let data = await API.fetchAllFinanceData(userId);
-        
-        if (data.categories.length === 0) {
-          // New user -> seed categories
-          await API.seedDefaultCategories(userId);
-          data = await API.fetchAllFinanceData(userId); // reload
-        }
-
-        let rawCategories = data.categories;
-        const canonicalCat = new Map<string, string>(); 
-        const uniqueCategories: Category[] = [];
-
-        // 1. Process parents
-        for (const c of rawCategories) {
-          if (!c.parentCategoryId) {
-            const key = `${c.name}-${c.kind}`;
-            if (!canonicalCat.has(key)) {
-              canonicalCat.set(key, c.id);
-              uniqueCategories.push(c);
-            }
-          }
-        }
-
-        // 2. Process children
-        for (const c of rawCategories) {
-          if (c.parentCategoryId) {
-            const parent = rawCategories.find((p) => p.id === c.parentCategoryId);
-            if (parent) {
-              const pKey = `${parent.name}-${parent.kind}`;
-              const canonicalId = canonicalCat.get(pKey);
-              if (canonicalId) {
-                const childCopy = { ...c, parentCategoryId: canonicalId };
-                const cKey = `${childCopy.name}-${childCopy.kind}-${canonicalId}`;
-                if (!canonicalCat.has(cKey)) {
-                  canonicalCat.set(cKey, childCopy.id);
-                  uniqueCategories.push(childCopy);
-                }
-              }
-            }
-          }
-        }
-
-        setAccounts(data.accounts);
-        setCategories(uniqueCategories);
-        setBudgets(data.budgets);
-        setTransactions(data.transactions);
-        setHoldings(data.holdings);
-        setValuations(data.valuations);
-        setExchangeRates(data.exchangeRates);
-      } catch (err: any) {
-        console.error('Failed to load finance data', err);
-        alert('Failed to load finance data from server: ' + err.message);
-      } finally {
-        setIsLoadingData(false);
-      }
-    };
-
     loadData();
-  }, [userId]);
+  }, [userId, loadData]);
+
+  const refreshData = React.useCallback(async (silent = false) => {
+    await loadData(silent);
+  }, [loadData]);
 
   // Helper: Currency conversion to Base Currency (IDR)
   const convertCurrencyToBaseWrapper = (amount: number, currency: string): number => {
@@ -695,6 +700,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
         exchangeRates,
         valuations,
         isLoadingData,
+        refreshData,
         activeTab,
         setActiveTab,
         globalMonth,
