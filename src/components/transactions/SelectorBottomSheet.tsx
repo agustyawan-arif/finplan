@@ -261,8 +261,10 @@ export const CategorySelectorBottomSheet: React.FC<CategorySelectorProps> = ({
         {/* Scroll List */}
         <div className="flex-1 overflow-y-auto px-6 py-2 space-y-4 no-scrollbar">
           {rootCategories.map((parent) => {
-            // Find children belonging to this parent
-            const children = filteredCategories.filter((c) => c.parentCategoryId === parent.id);
+            // Find children belonging to this parent and sort alphabetically
+            const children = filteredCategories
+              .filter((c) => c.parentCategoryId === parent.id)
+              .sort((a, b) => a.name.localeCompare(b.name));
 
             // If we are searching and parent matches but has no children or child list matches
             if (children.length === 0 && search.trim() !== '' && !parent.name.toLowerCase().includes(search.toLowerCase())) {

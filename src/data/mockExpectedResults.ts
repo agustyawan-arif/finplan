@@ -4,8 +4,8 @@ export const mockExpectedResults = {
     expenses: {
       cat_food: 50000,
       cat_rent: 2000000,
-      cat_coffee: 30000,
-      cat_trail_run: 350000,
+      cat_wants_food: 30000,
+      cat_travel: 350000,
       cat_donation: 100000,
       total: 2530000,
     },
