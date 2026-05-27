@@ -99,6 +99,8 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       setPullDistance(threshold); // Hold spinner at threshold height during refresh
       try {
         await onRefresh();
+        // Add a satisfying 600ms visual delay once loading completes before retracting
+        await new Promise((resolve) => setTimeout(resolve, 600));
       } catch (err) {
         console.error('Pull-to-refresh failed', err);
       } finally {
@@ -137,11 +139,12 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       className="flex-1 flex flex-col overflow-y-auto no-scrollbar relative select-none h-full"
     >
       {/* Loading Spinner Header (Instagram Style Glassmorphic Indicator) */}
+      {/* perfectly centered using flexbox (left-0 right-0 justify-center) */}
       <div 
-        className="absolute top-4 left-1/2 -translate-x-1/2 z-40 pointer-events-none transition-all duration-300"
+        className="absolute top-4 left-0 right-0 z-40 pointer-events-none flex justify-center transition-all duration-300"
         style={{
           opacity: pullDistance > 10 || refreshing ? 1 : 0,
-          transform: `translate(-50%, ${pullDistance - 40}px) scale(${0.6 + pullProgress * 0.4})`,
+          transform: `translateY(${pullDistance - 40}px) scale(${0.6 + pullProgress * 0.4})`,
           transition: activePulling ? 'none' : 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.2s'
         }}
       >
