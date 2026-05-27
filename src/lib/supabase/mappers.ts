@@ -75,7 +75,7 @@ export function mapCategoryToInsert(category: Omit<Category, 'id' | 'createdAt' 
 export function mapBudgetRowToBudget(row: any): Budget {
   return {
     id: row.id,
-    month: row.month,
+    month: typeof row.month === 'string' && row.month.length >= 7 ? row.month.substring(0, 7) : row.month,
     categoryId: row.category_id,
     plannedAmount: Number(row.planned_amount),
     currency: row.currency,
@@ -89,7 +89,7 @@ export function mapBudgetRowToBudget(row: any): Budget {
 export function mapBudgetToInsert(budget: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>, userId: string) {
   return {
     user_id: userId,
-    month: budget.month,
+    month: typeof budget.month === 'string' && budget.month.length === 7 ? `${budget.month}-01` : budget.month,
     category_id: budget.categoryId,
     planned_amount: budget.plannedAmount,
     currency: budget.currency,
