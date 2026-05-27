@@ -194,11 +194,12 @@ export const AboutPockitContent: React.FC = () => {
     <div className="space-y-6">
       {/* Brand card */}
       <div className="flex flex-col items-center text-center space-y-2">
-        <div className="bg-[#0f172a] w-12 h-12 rounded-xl flex items-center justify-center text-[#6cf8bb] shadow-sm animate-fade-in shrink-0">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2H8a1 1 0 0 0-1 1v18a1 1 0 0 0 1 1h4a5 5 0 0 0 5-5V7a5 5 0 0 0-5-5z" />
-            <path d="M7 11h10" />
-          </svg>
+        <div className="w-12 h-12 overflow-hidden flex items-center justify-center shrink-0 animate-fade-in">
+          <img 
+            src="/transparent-icon.png"
+            alt="Pockit Logo"
+            className="w-12 h-12 object-contain scale-[2.2]"
+          />
         </div>
         <div>
           <h4 className="text-base font-extrabold text-[#0b1c30]">{APP_CONFIG.appName}</h4>

@@ -7,27 +7,21 @@ import { APP_CONFIG } from '../../lib/appConfig';
 function PockitLogo({ size = 48 }: { size?: number }) {
   return (
     <div 
-      className="bg-primary flex items-center justify-center shadow-ambient shrink-0 animate-fade-in" 
+      className="overflow-hidden flex items-center justify-center shrink-0 animate-fade-in" 
       style={{ 
         width: `${size}px`, 
-        height: `${size}px`, 
-        borderRadius: `${size * 0.3}px` 
+        height: `${size}px` 
       }}
     >
-      <svg
-        width={size * 0.55}
-        height={size * 0.55}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="text-[#6cf8bb]"
-      >
-        <path d="M12 2H8a1 1 0 0 0-1 1v18a1 1 0 0 0 1 1h4a5 5 0 0 0 5-5V7a5 5 0 0 0-5-5z" />
-        <path d="M7 11h10" />
-      </svg>
+      <img 
+        src="/transparent-icon.png"
+        alt="Pockit Logo"
+        className="object-contain scale-[2.2]" 
+        style={{ 
+          width: `${size}px`, 
+          height: `${size}px` 
+        }}
+      />
     </div>
   );
 }
