@@ -268,12 +268,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
 
     const groups = ['Needs', 'Wants', 'Saving', 'Charity'].map((groupName) => {
       const parentCat = categories.find((c) => c.name === groupName && !c.parentCategoryId);
-      const budget = monthBudgets.find((b) => b.categoryId === parentCat?.id);
-      const planned = budget ? budget.plannedAmount : 0;
-      totalPlanned += planned;
+      const parentBudget = parentCat ? monthBudgets.find((b) => b.categoryId === parentCat.id) : null;
 
       // Children categories
-      const children = categories.filter((c) => c.parentCategoryId === parentCat?.id);
+      const children = parentCat ? categories.filter((c) => c.parentCategoryId === parentCat.id) : [];
+
+      // Calculate sum of child planned budgets
+      const childrenPlannedSum = children.reduce((sum, child) => {
+        const childBudget = monthBudgets.find((b) => b.categoryId === child.id);
+        return sum + (childBudget ? childBudget.plannedAmount : 0);
+      }, 0);
+
+      const planned = (parentBudget ? parentBudget.plannedAmount : 0) + childrenPlannedSum;
+      totalPlanned += planned;
 
       let used = 0;
 
@@ -324,7 +331,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
           childUsed = calculateBudgetUsage(categories, transactions, month, c.id, exchangeRates);
         }
 
-        const childPlanned = 0;
+        const childBudget = monthBudgets.find((b) => b.categoryId === c.id);
+        const childPlanned = childBudget ? childBudget.plannedAmount : 0;
         const childRemaining = childPlanned - childUsed;
 
         return {

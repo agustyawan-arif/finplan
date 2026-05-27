@@ -32,10 +32,15 @@ export const BudgetCategoryBreakdown: React.FC<BudgetCategoryBreakdownProps> = (
             <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
             <span className="font-semibold text-slate-700">{c.name}</span>
           </div>
-          <div className="flex items-center gap-1.5 font-extrabold text-[#0b1c30]">
-            <span>{formatIDR(c.used)}</span>
+          <div className="text-right flex flex-col items-end gap-0.5 font-extrabold text-[#0b1c30]">
+            <span className="leading-none">{formatIDR(c.used)}</span>
+            {c.planned > 0 && (
+              <span className="text-[9px] text-slate-400 font-bold leading-none mt-0.5">
+                / {formatIDR(c.planned)}
+              </span>
+            )}
             {isSavingGroup && c.used > 0 && (
-              <span className="text-[9px] text-[#006c49] bg-emerald-50 px-1 rounded-sm flex items-center font-bold">
+              <span className="text-[8px] text-[#006c49] bg-emerald-50 px-1 py-0.5 rounded-sm flex items-center font-bold mt-0.5">
                 Saved <ArrowUpRight size={8} className="ml-0.5" />
               </span>
             )}
