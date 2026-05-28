@@ -79,6 +79,17 @@ export const mockCategories: Category[] = [
     createdAt: '2026-05-01T00:00:00Z',
     updatedAt: '2026-05-01T00:00:00Z',
   },
+  {
+    id: 'cat_fees',
+    name: 'Fees',
+    parentCategoryId: 'cat_needs',
+    kind: 'expense',
+    budgetBehavior: 'expense',
+    isActive: true,
+    sortOrder: 8,
+    createdAt: '2026-05-01T00:00:00Z',
+    updatedAt: '2026-05-01T00:00:00Z',
+  },
 
   // Parent Wants
   {
@@ -87,7 +98,7 @@ export const mockCategories: Category[] = [
     kind: 'expense',
     budgetBehavior: 'expense',
     isActive: true,
-    sortOrder: 8,
+    sortOrder: 9,
     createdAt: '2026-05-01T00:00:00Z',
     updatedAt: '2026-05-01T00:00:00Z',
   },

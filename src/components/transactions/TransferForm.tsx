@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { CurrencyInput, FormInput, FormTextarea, SubmitButton, FormPickerTrigger, FormDatePickerTrigger } from './TransactionFormFields';
 import { CurrencyCode } from '../../types/finance';
-import { AccountSelectorBottomSheet } from './SelectorBottomSheet';
+import { AccountSelectorBottomSheet, CategorySelectorBottomSheet } from './SelectorBottomSheet';
 import { DatePickerBottomSheet } from './DatePickerBottomSheet';
 
 interface TransferFormProps {
@@ -18,7 +18,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
   defaultFromAccountId = '',
   defaultToAccountId = '',
 }) => {
-  const { accounts, addTransaction, convertCurrencyToBase } = useApp();
+  const { accounts, categories, addTransaction, addTransferWithFee, convertCurrencyToBase, getCategoryName } = useApp();
 
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState<CurrencyCode>('IDR');
@@ -29,6 +29,25 @@ export const TransferForm: React.FC<TransferFormProps> = ({
   const [exchangeRate, setExchangeRate] = useState('1');
   const [note, setNote] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [feeAmount, setFeeAmount] = useState('');
+  const [feeCategoryId, setFeeCategoryId] = useState('');
+  const [isFeeCategoryPickerOpen, setIsFeeCategoryPickerOpen] = useState(false);
+
+  // Find default Needs / Fees category
+  const defaultFeeCategory = React.useMemo(() => {
+    const parentNeeds = categories.find((c) => c.name === 'Needs' && !c.parentCategoryId);
+    if (!parentNeeds) return null;
+    return categories.find((c) => c.name === 'Fees' && c.parentCategoryId === parentNeeds.id) || null;
+  }, [categories]);
+
+  // Auto-set default fee category if available
+  useEffect(() => {
+    if (defaultFeeCategory && !feeCategoryId) {
+      setFeeCategoryId(defaultFeeCategory.id);
+    }
+  }, [defaultFeeCategory, feeCategoryId]);
+
+  const selectedFeeCategory = categories.find((c) => c.id === feeCategoryId);
 
   // Picker sheets visibility
   const [isFromAccountPickerOpen, setIsFromAccountPickerOpen] = useState(false);
@@ -111,10 +130,24 @@ export const TransferForm: React.FC<TransferFormProps> = ({
       return;
     }
 
+    const parsedFee = parseFloat(feeAmount);
+    const hasFee = !isNaN(parsedFee) && parsedFee > 0;
+
+    if (hasFee) {
+      if (parsedFee < 0) {
+        setErrorMessage('Fee amount must be greater than or equal to 0.');
+        return;
+      }
+      if (!feeCategoryId) {
+        setErrorMessage('Please select a category for the transfer fee.');
+        return;
+      }
+    }
+
     const rateToBase = convertCurrencyToBase(1, currency);
 
-    addTransaction({
-      type: 'transfer',
+    const transferPayload = {
+      type: 'transfer' as const,
       date,
       amount: parsedAmount,
       currency,
@@ -125,9 +158,17 @@ export const TransferForm: React.FC<TransferFormProps> = ({
       exchangeRateToBase: rateToBase,
       isExcludedFromBudget: true, // Transfers are omitted from budget tracking
       isExcludedFromCashflow: true, // Transfers are omitted from cashflow reports
-    });
+    };
 
-    onSuccess();
+    if (hasFee) {
+      addTransferWithFee(transferPayload, parsedFee, feeCategoryId)
+        .then(() => onSuccess())
+        .catch(() => {});
+    } else {
+      addTransaction(transferPayload)
+        .then(() => onSuccess())
+        .catch(() => {});
+    }
   };
 
   return (
@@ -183,6 +224,42 @@ export const TransferForm: React.FC<TransferFormProps> = ({
             />
           )}
 
+          {/* Transfer Fee Section (Optional) */}
+          <div className="bg-slate-50/50 border border-slate-100 p-4 rounded-2xl space-y-3 mt-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-slate-800 tracking-tight">Transfer Fee</span>
+              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest bg-slate-100/80 px-2 py-0.5 rounded-md">Optional</span>
+            </div>
+            
+            <FormInput
+              label={`Fee Amount (${currency})`}
+              type="number"
+              step="any"
+              placeholder="e.g. 2500"
+              value={feeAmount}
+              onChange={(e) => {
+                setFeeAmount(e.target.value);
+                setErrorMessage('');
+              }}
+            />
+
+            {parseFloat(feeAmount) > 0 && (
+              <div className="animate-fade-in space-y-1.5 pt-1">
+                <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block pl-1">Fee Category</label>
+                <FormPickerTrigger
+                  label="Category"
+                  valueText={selectedFeeCategory ? selectedFeeCategory.name : 'Select category...'}
+                  subtitleText={
+                    selectedFeeCategory && selectedFeeCategory.parentCategoryId 
+                      ? getCategoryName(selectedFeeCategory.parentCategoryId) 
+                      : undefined
+                  }
+                  onClick={() => setIsFeeCategoryPickerOpen(true)}
+                />
+              </div>
+            )}
+          </div>
+
           <FormTextarea
             label="Note / Memo (Optional)"
             placeholder="Add memo details..."
@@ -217,6 +294,15 @@ export const TransferForm: React.FC<TransferFormProps> = ({
         selectedDate={date}
         onSelect={(d) => setDate(d)}
         title="Transfer Date"
+      />
+
+      <CategorySelectorBottomSheet
+        isOpen={isFeeCategoryPickerOpen}
+        onClose={() => setIsFeeCategoryPickerOpen(false)}
+        title="Choose Fee Category"
+        selectedId={feeCategoryId}
+        kind="expense"
+        onSelect={(cat) => setFeeCategoryId(cat.id)}
       />
     </>
   );

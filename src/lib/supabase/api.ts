@@ -76,6 +76,7 @@ export async function seedDefaultCategories(userId: string): Promise<Category[]>
     { name: 'Utilities', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Needs'), sort_order: 14 },
     { name: 'Food', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Needs'), sort_order: 15 },
     { name: 'Pets', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Needs'), sort_order: 16 },
+    { name: 'Fees', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Needs'), sort_order: 17 },
 
     // Wants Children
     { name: 'Food', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Wants'), sort_order: 21 },

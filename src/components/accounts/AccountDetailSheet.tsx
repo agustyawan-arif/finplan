@@ -278,8 +278,8 @@ export const AccountDetailSheet: React.FC<AccountDetailSheetProps> = ({
                       key={t.id}
                       className="bg-white p-3 rounded-xl border border-slate-100 shadow-ambient flex items-center justify-between text-xs"
                     >
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 font-bold text-[10px] capitalize">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 font-bold text-[10px] capitalize shrink-0">
                           {t.type.substring(0, 2)}
                         </div>
                         <div>

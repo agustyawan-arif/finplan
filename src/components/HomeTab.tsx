@@ -195,8 +195,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({ onOpenDrawer }) => {
                 key={t.id}
                 className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-ambient flex items-center justify-between"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 font-bold text-xs capitalize">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 font-bold text-xs capitalize shrink-0">
                     {t.type.substring(0, 2)}
                   </div>
                   <div>

@@ -119,6 +119,11 @@ interface AppContextType {
     exchangeRateToBase?: number;
     note?: string;
   }) => Promise<void>;
+  addTransferWithFee: (
+    transferData: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>,
+    feeAmount?: number,
+    feeCategoryId?: string
+  ) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -395,11 +400,79 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
     }
   };
 
+  const addTransferWithFee = async (
+    transferData: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>,
+    feeAmount?: number,
+    feeCategoryId?: string
+  ) => {
+    if (!userId) return;
+    let createdTransferTx: Transaction | null = null;
+    try {
+      // 1. Create transfer transaction
+      createdTransferTx = await API.insertTransaction(transferData, userId);
+      
+      // Update state for transfer
+      setTransactions((prev) => [createdTransferTx!, ...prev]);
+
+      // 2. If feeAmount is specified and > 0, create the fee expense transaction
+      if (feeAmount && feeAmount > 0) {
+        if (!feeCategoryId) {
+          throw new Error('Fee category is required when fee amount is greater than 0.');
+        }
+
+        const feeData: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'> = {
+          type: 'expense',
+          accountId: transferData.accountId,
+          amount: feeAmount,
+          currency: transferData.currency,
+          categoryId: feeCategoryId,
+          title: 'Transfer fee',
+          note: `Linked to transfer to ${getAccountName(transferData.destinationAccountId)}`,
+          relatedTransactionId: createdTransferTx.id,
+          date: transferData.date,
+          exchangeRateToBase: transferData.exchangeRateToBase,
+          isExcludedFromBudget: false,
+          isExcludedFromCashflow: false,
+        };
+
+        try {
+          const newFeeTx = await API.insertTransaction(feeData, userId);
+          setTransactions((prev) => [newFeeTx, ...prev]);
+          showSuccess('Transfer and fee added');
+        } catch (feeErr) {
+          console.error('Failed to create transfer fee, attempting rollback of transfer:', feeErr);
+          // Rollback the transfer transaction
+          try {
+            await API.deleteTransactionRecord(createdTransferTx.id);
+            setTransactions((prev) => prev.filter((t) => t.id !== createdTransferTx!.id));
+          } catch (rollbackErr) {
+            console.error('Rollback of transfer failed:', rollbackErr);
+          }
+          throw new Error('Failed to record transfer fee. The transfer has been cancelled to keep data consistent.');
+        }
+      } else {
+        showSuccess('Transfer added');
+      }
+    } catch (err: any) {
+      console.error(err);
+      showError(err.message || 'Couldn’t save transfer. Please try again.');
+      throw err;
+    }
+  };
+
   const deleteTransaction = async (id: string) => {
     if (!userId) return;
     try {
+      // Find if there is any related transaction (e.g. child fee pointing to this transfer)
+      const childTx = transactions.find((t) => t.relatedTransactionId === id);
+      
+      if (childTx) {
+        // Delete child transaction first because of foreign key constraint
+        await API.deleteTransactionRecord(childTx.id);
+      }
+
       await API.deleteTransactionRecord(id);
-      setTransactions((prev) => prev.filter((t) => t.id !== id));
+      setTransactions((prev) => prev.filter((t) => t.id !== id && t.relatedTransactionId !== id));
       showSuccess('Transaction deleted');
     } catch (err: any) {
       console.error(err);
@@ -735,6 +808,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
         globalMonth,
         setGlobalMonth,
         addTransaction,
+        addTransferWithFee,
         deleteTransaction,
         convertCurrencyToBase: convertCurrencyToBaseWrapper,
         getAccountBalance: getAccountBalanceWrapper,
