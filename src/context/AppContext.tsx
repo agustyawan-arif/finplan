@@ -154,7 +154,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
         await API.seedDefaultCategories(userId);
         data = await API.fetchAllFinanceData(userId); // reload
       } else {
-        // Existing user -> check if 'Subscription Fund' category is missing under parent 'Saving'
+        // Existing user -> check for missing default categories
+        let needsReload = false;
+        
+        // 1. Check 'Subscription Fund' under parent 'Saving'
         const parentSaving = data.categories.find(c => c.name === 'Saving' && !c.parentCategoryId);
         const hasSubscriptionFund = data.categories.some(
           c => c.name === 'Subscription Fund' && c.parentCategoryId === parentSaving?.id
@@ -169,11 +172,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
               parent_category_id: parentSaving.id,
               sort_order: 35
             });
-            // Reload data to get the new category loaded
-            data = await API.fetchAllFinanceData(userId);
+            needsReload = true;
           } catch (insertErr) {
             console.error('Failed to auto-sync missing Subscription Fund category:', insertErr);
           }
+        }
+
+        // 2. Check 'Fees' under parent 'Needs'
+        const parentNeeds = data.categories.find(c => c.name === 'Needs' && !c.parentCategoryId);
+        const hasFees = data.categories.some(
+          c => c.name === 'Fees' && c.parentCategoryId === parentNeeds?.id
+        );
+        if (parentNeeds && !hasFees) {
+          try {
+            await supabase.from('categories').insert({
+              user_id: userId,
+              name: 'Fees',
+              kind: 'expense',
+              budget_behavior: 'expense',
+              parent_category_id: parentNeeds.id,
+              sort_order: 17
+            });
+            needsReload = true;
+          } catch (insertErr) {
+            console.error('Failed to auto-sync missing Fees category:', insertErr);
+          }
+        }
+
+        if (needsReload) {
+          data = await API.fetchAllFinanceData(userId);
         }
       }
 
