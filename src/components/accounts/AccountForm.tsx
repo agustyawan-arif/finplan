@@ -50,6 +50,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({ onSuccess, accountToEd
     { id: 'bill_payment', label: 'Monthly bill allocations' },
     { id: 'investment', label: 'Investments & capital growth' },
     { id: 'deposit', label: 'Fixed deposit certificate' },
+    { id: 'subscription_fund', label: 'Subscription Fund' },
     { id: 'other', label: 'Other purposes' },
   ];
 

@@ -89,6 +89,7 @@ export async function seedDefaultCategories(userId: string): Promise<Category[]>
     { name: 'Investment', kind: 'allocation', budget_behavior: 'allocation', parent_category_id: getParentId('Saving'), sort_order: 32 },
     { name: 'Deposit', kind: 'allocation', budget_behavior: 'allocation', parent_category_id: getParentId('Saving'), sort_order: 33 },
     { name: 'Travel Fund', kind: 'allocation', budget_behavior: 'allocation', parent_category_id: getParentId('Saving'), sort_order: 34 },
+    { name: 'Subscription Fund', kind: 'allocation', budget_behavior: 'allocation', parent_category_id: getParentId('Saving'), sort_order: 35 },
 
     // Charity Children
     { name: 'Donation', kind: 'expense', budget_behavior: 'expense', parent_category_id: getParentId('Charity'), sort_order: 41 },

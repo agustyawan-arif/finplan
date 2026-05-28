@@ -204,6 +204,17 @@ export const mockCategories: Category[] = [
     createdAt: '2026-05-01T00:00:00Z',
     updatedAt: '2026-05-01T00:00:00Z',
   },
+  {
+    id: 'cat_subscription_fund',
+    name: 'Subscription Fund',
+    parentCategoryId: 'cat_saving',
+    kind: 'allocation',
+    budgetBehavior: 'allocation',
+    isActive: true,
+    sortOrder: 18,
+    createdAt: '2026-05-01T00:00:00Z',
+    updatedAt: '2026-05-01T00:00:00Z',
+  },
 
   // Parent Charity
   {

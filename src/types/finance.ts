@@ -10,6 +10,7 @@ export type AccountPurpose =
   | 'investment'
   | 'deposit'
   | 'bill_payment'
+  | 'subscription_fund'
   | 'other';
 
 export interface Account {

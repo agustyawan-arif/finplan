@@ -17,6 +17,7 @@ export const ACCOUNT_PURPOSES = [
   'investment',
   'deposit',
   'bill_payment',
+  'subscription_fund',
   'other',
 ] as const;
 
@@ -58,4 +59,5 @@ export const SAVING_PURPOSES = [
   'travel_fund',
   'investment',
   'deposit',
+  'subscription_fund',
 ] as const;

@@ -205,7 +205,7 @@ export const calculateSavingAllocation = (
         const destAcc = accounts.find((a) => a.id === t.destinationAccountId);
         if (
           destAcc &&
-          ['saving', 'emergency_fund', 'travel_fund', 'investment', 'deposit'].includes(
+          ['saving', 'emergency_fund', 'travel_fund', 'investment', 'deposit', 'subscription_fund'].includes(
             destAcc.purpose
           )
         ) {

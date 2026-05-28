@@ -21,6 +21,7 @@ import {
   convertCurrencyToBase,
 } from '../lib/finance/calculations';
 import * as API from '../lib/supabase/api';
+import { supabase } from '../lib/supabase/client';
 import { useToast } from '../hooks/useToast';
 
 interface AppContextType {
@@ -152,6 +153,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
         // New user -> seed categories
         await API.seedDefaultCategories(userId);
         data = await API.fetchAllFinanceData(userId); // reload
+      } else {
+        // Existing user -> check if 'Subscription Fund' category is missing under parent 'Saving'
+        const parentSaving = data.categories.find(c => c.name === 'Saving' && !c.parentCategoryId);
+        const hasSubscriptionFund = data.categories.some(
+          c => c.name === 'Subscription Fund' && c.parentCategoryId === parentSaving?.id
+        );
+        if (parentSaving && !hasSubscriptionFund) {
+          try {
+            await supabase.from('categories').insert({
+              user_id: userId,
+              name: 'Subscription Fund',
+              kind: 'allocation',
+              budget_behavior: 'allocation',
+              parent_category_id: parentSaving.id,
+              sort_order: 35
+            });
+            // Reload data to get the new category loaded
+            data = await API.fetchAllFinanceData(userId);
+          } catch (insertErr) {
+            console.error('Failed to auto-sync missing Subscription Fund category:', insertErr);
+          }
+        }
       }
 
       let rawCategories = data.categories;
@@ -327,6 +350,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
                   else if (destAcc.purpose === 'travel_fund' && c.name === 'Travel Fund') isMatch = true;
                   else if (destAcc.purpose === 'investment' && c.name === 'Investment') isMatch = true;
                   else if (destAcc.purpose === 'deposit' && c.name === 'Deposit') isMatch = true;
+                  else if (destAcc.purpose === 'subscription_fund' && c.name === 'Subscription Fund') isMatch = true;
                 }
               }
 
