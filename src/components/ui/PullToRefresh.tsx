@@ -167,7 +167,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       </div>
 
       {/* Main child viewport being pulled down */}
-      <div className="flex-1 flex flex-col" style={translateStyle}>
+      <div className="flex-1 flex flex-col h-full" style={translateStyle}>
         {children}
       </div>
     </div>
