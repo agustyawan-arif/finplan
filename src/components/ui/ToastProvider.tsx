@@ -57,7 +57,7 @@ export const ToastContainer: React.FC = () => {
 
   return (
     <div 
-      className="absolute top-[68px] left-0 right-0 z-50 px-4 pointer-events-none flex justify-center w-full"
+      className="absolute top-[68px] left-0 right-0 z-[110] px-4 pointer-events-none flex justify-center w-full"
     >
       <Toast 
         message={activeToast.message} 

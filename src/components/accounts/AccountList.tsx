@@ -166,14 +166,17 @@ export const AccountList: React.FC = () => {
       </div>
 
       {/* Account detail Sheet Inspector */}
-      {selectedAccount && (
-        <AccountDetailSheet
-          account={selectedAccount}
-          isOpen={!!selectedAccount}
-          onClose={() => setSelectedAccount(null)}
-          onEditTrigger={() => handleEditClick(selectedAccount)}
-        />
-      )}
+      {selectedAccount && (() => {
+        const liveAccount = accounts.find((a) => a.id === selectedAccount.id) || selectedAccount;
+        return (
+          <AccountDetailSheet
+            account={liveAccount}
+            isOpen={!!selectedAccount}
+            onClose={() => setSelectedAccount(null)}
+            onEditTrigger={() => handleEditClick(liveAccount)}
+          />
+        );
+      })()}
 
       {/* Add / Edit Account bottom sheet form */}
       {isFormOpen && (
