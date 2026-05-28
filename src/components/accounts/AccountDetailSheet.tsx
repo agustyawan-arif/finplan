@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Edit2, ShieldAlert, Trash2, Calendar, Landmark, HelpCircle, ArrowRightLeft, Plus } from 'lucide-react';
+import { X, Edit2, ShieldAlert, Trash2, Calendar, Landmark, HelpCircle, ArrowRightLeft, Plus, Star } from 'lucide-react';
 import { Account, InvestmentHolding } from '../../types/finance';
 import { useApp } from '../../context/AppContext';
 import { AccountTypeBadge } from './AccountTypeBadge';
@@ -32,12 +32,17 @@ export const AccountDetailSheet: React.FC<AccountDetailSheetProps> = ({
     getAccountBalance,
     getCategoryName,
     getAccountName,
+    updateAccount,
   } = useApp();
 
   const [selectedHolding, setSelectedHolding] = useState<InvestmentHolding | null>(null);
   const [isHoldingFormOpen, setIsHoldingFormOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isBlockWarningOpen, setIsBlockWarningOpen] = useState(false);
+
+  const handleToggleFavorite = async () => {
+    await updateAccount(account.id, { isFavorite: !account.isFavorite });
+  };
 
   if (!isOpen) return null;
 
@@ -193,6 +198,20 @@ export const AccountDetailSheet: React.FC<AccountDetailSheetProps> = ({
               </div>
             </div>
           )}
+
+          {/* Favorite account toggle button */}
+          <button
+            onClick={handleToggleFavorite}
+            className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-2xl transition-all active:scale-[0.99] text-xs font-bold text-slate-700 shrink-0"
+          >
+            <div className="flex items-center gap-2">
+              <Star size={16} className={account.isFavorite ? "fill-amber-500 stroke-amber-500" : "text-slate-400"} />
+              <span>Favorite account</span>
+            </div>
+            <span className="text-[10px] font-bold text-[#006c49] hover:underline">
+              {account.isFavorite ? 'Remove' : 'Add'}
+            </span>
+          </button>
 
           {/* Parameters grid list */}
           <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 grid grid-cols-2 gap-y-3.5 gap-x-2 text-xs">

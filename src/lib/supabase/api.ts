@@ -128,6 +128,7 @@ export async function updateAccountRecord(accountId: string, input: Partial<Omit
   if (input.parentAccountId !== undefined) payload.parent_account_id = input.parentAccountId;
   if (input.initialBalance !== undefined) payload.initial_balance = input.initialBalance;
   if (input.isActive !== undefined) payload.is_active = input.isActive;
+  if (input.isFavorite !== undefined) payload.is_favorite = input.isFavorite;
 
   const { data, error } = await supabase.from('accounts').update(payload).eq('id', accountId).select().single();
   if (error) throw error;

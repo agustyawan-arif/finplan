@@ -4,6 +4,7 @@ import { useApp } from '../../context/AppContext';
 import { AccountTypeBadge } from './AccountTypeBadge';
 import { AccountBalance } from './AccountBalance';
 import { deriveHoldingState } from '../../lib/finance/calculations';
+import { Star } from 'lucide-react';
 
 interface AccountCardProps {
   account: Account;
@@ -55,6 +56,9 @@ export const AccountCard: React.FC<AccountCardProps> = ({ account, onClick, isPo
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-xs font-bold text-slate-800 line-clamp-1">{account.name}</span>
             <AccountTypeBadge type={account.type} />
+            {account.isFavorite && (
+              <Star size={10} className="fill-amber-500 stroke-amber-500 shrink-0" />
+            )}
             {!account.isActive && (
               <span className="text-[8px] font-extrabold bg-slate-100 text-slate-400 border border-slate-200 px-1 rounded-sm">
                 Inactive

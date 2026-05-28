@@ -23,6 +23,7 @@ export interface Account {
   parentAccountId?: string | null;
   initialBalance: number;
   isActive: boolean;
+  isFavorite?: boolean;
   createdAt: string;
   updatedAt: string;
 }

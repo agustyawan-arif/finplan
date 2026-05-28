@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { X, Search, Landmark, Coins, Briefcase, PiggyBank, ArrowUpRight } from 'lucide-react';
+import { X, Search, Landmark, Coins, Briefcase, PiggyBank, ArrowUpRight, Star } from 'lucide-react';
 import { Account, Category, InvestmentHolding } from '../../types/finance';
 import { useApp } from '../../context/AppContext';
 import { formatCurrency } from '../../lib/finance/formatters';
@@ -47,14 +47,26 @@ export const AccountSelectorBottomSheet: React.FC<AccountSelectorProps> = ({
     );
   });
 
+  // Separate favorites
+  const favoriteAccounts = filteredAccounts.filter((a) => a.isFavorite);
+
+  // Sort helper to prioritize favorites within individual categories
+  const sortFavsFirst = (list: Account[]) => {
+    return [...list].sort((a, b) => {
+      const favA = a.isFavorite ? 1 : 0;
+      const favB = b.isFavorite ? 1 : 0;
+      return favB - favA;
+    });
+  };
+
   // Group accounts by type
   const grouped = {
-    cash: filteredAccounts.filter((a) => a.type === 'cash'),
-    bank: filteredAccounts.filter((a) => a.type === 'bank'),
-    pocket: filteredAccounts.filter((a) => a.type === 'pocket'),
-    e_wallet: filteredAccounts.filter((a) => a.type === 'e_wallet'),
-    investment: filteredAccounts.filter((a) => a.type === 'investment'),
-    deposit: filteredAccounts.filter((a) => a.type === 'deposit'),
+    cash: sortFavsFirst(filteredAccounts.filter((a) => a.type === 'cash')),
+    bank: sortFavsFirst(filteredAccounts.filter((a) => a.type === 'bank')),
+    pocket: sortFavsFirst(filteredAccounts.filter((a) => a.type === 'pocket')),
+    e_wallet: sortFavsFirst(filteredAccounts.filter((a) => a.type === 'e_wallet')),
+    investment: sortFavsFirst(filteredAccounts.filter((a) => a.type === 'investment')),
+    deposit: sortFavsFirst(filteredAccounts.filter((a) => a.type === 'deposit')),
   };
 
   const groupLabels: Record<string, string> = {
@@ -121,6 +133,59 @@ export const AccountSelectorBottomSheet: React.FC<AccountSelectorProps> = ({
 
         {/* Scroll List */}
         <div className="flex-1 overflow-y-auto px-6 py-2 space-y-4 no-scrollbar">
+          {/* 1. Prioritized Favorites Section */}
+          {favoriteAccounts.length > 0 && (
+            <div className="space-y-1.5 bg-amber-500/5 border border-amber-500/10 p-3 rounded-2xl">
+              <h4 className="text-[9px] font-black text-amber-500 uppercase tracking-widest pl-1 flex items-center gap-1.5 select-none">
+                <Star size={10} className="fill-amber-500 stroke-amber-500 shrink-0" /> Favorite accounts
+              </h4>
+              <div className="space-y-1">
+                {favoriteAccounts.map((acc) => {
+                  const isSelected = acc.id === selectedId;
+                  const balance = getAccountBalance(acc.id);
+                  return (
+                    <button
+                      key={`fav-${acc.id}`}
+                      type="button"
+                      onClick={() => {
+                        onSelect(acc);
+                        onClose();
+                      }}
+                      className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all active:scale-[0.99] select-none
+                        ${
+                          isSelected
+                            ? 'bg-[#0f172a] border-[#0f172a] text-white shadow-sm'
+                            : 'bg-white border-slate-100 hover:bg-slate-100 text-slate-800'
+                        }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center border shrink-0
+                          ${isSelected ? 'bg-white/10 border-white/10 text-white' : 'bg-white border-slate-100'}`}>
+                          {getAccountIcon(acc.type)}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs font-extrabold block truncate leading-tight">
+                              {acc.name}
+                            </span>
+                            <Star size={9} className="fill-amber-500 stroke-amber-500 shrink-0" />
+                          </div>
+                          <span className="text-[8px] font-bold uppercase tracking-wider block mt-0.5 text-slate-400">
+                            {acc.institution} • {acc.currency}
+                          </span>
+                        </div>
+                      </div>
+                      <span className={`text-xs font-black shrink-0 ml-3
+                        ${isSelected ? 'text-white' : 'text-[#0b1c30]'}`}>
+                        {formatCurrency(balance, acc.currency)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {Object.entries(grouped).map(([type, accList]) => {
             if (accList.length === 0) return null;
             return (
@@ -153,9 +218,14 @@ export const AccountSelectorBottomSheet: React.FC<AccountSelectorProps> = ({
                             {getAccountIcon(acc.type)}
                           </div>
                           <div className="min-w-0">
-                            <span className="text-xs font-extrabold block truncate leading-tight">
-                              {acc.name}
-                            </span>
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs font-extrabold block truncate leading-tight">
+                                {acc.name}
+                              </span>
+                              {acc.isFavorite && (
+                                <Star size={9} className="fill-amber-500 stroke-amber-500 shrink-0" />
+                              )}
+                            </div>
                             <span className={`text-[8px] font-bold uppercase tracking-wider block mt-0.5
                               ${isSelected ? 'text-slate-400' : 'text-slate-400'}`}>
                               {acc.institution} • {acc.currency}

@@ -569,7 +569,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
     try {
       const updatedAcc = await API.updateAccountRecord(accountId, input);
       setAccounts((prev) => prev.map((acc) => (acc.id === accountId ? updatedAcc : acc)));
-      showSuccess('Account updated');
+      if (input.isFavorite !== undefined) {
+        showSuccess(input.isFavorite ? 'Account added to favorites' : 'Account removed from favorites');
+      } else {
+        showSuccess('Account updated');
+      }
     } catch (err: any) {
       console.error(err);
       showError('Couldn’t update account. Please try again.');

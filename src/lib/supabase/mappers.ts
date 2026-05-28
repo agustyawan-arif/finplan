@@ -22,6 +22,7 @@ export function mapAccountRowToAccount(row: any): Account {
     parentAccountId: row.parent_account_id,
     initialBalance: Number(row.initial_balance),
     isActive: row.is_active,
+    isFavorite: !!row.is_favorite,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -37,6 +38,7 @@ export function mapAccountToInsert(account: Omit<Account, 'id' | 'createdAt' | '
     purpose: account.purpose,
     parent_account_id: account.parentAccountId || null,
     initial_balance: account.initialBalance,
+    is_favorite: account.isFavorite !== undefined ? account.isFavorite : false,
   };
 }
 
