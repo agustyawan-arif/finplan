@@ -46,8 +46,18 @@ export const getBudgetVsActualData = (
 
   return ['Needs', 'Wants', 'Saving', 'Charity'].map((groupName) => {
     const parentCat = categories.find((c) => c.name === groupName && !c.parentCategoryId);
-    const budget = monthBudgets.find((b) => b.categoryId === parentCat?.id);
-    const planned = budget?.plannedAmount ?? 0;
+    const parentBudget = parentCat ? monthBudgets.find((b) => b.categoryId === parentCat.id) : null;
+
+    // Find all children categories of this parent category
+    const children = parentCat ? categories.filter((c) => c.parentCategoryId === parentCat.id) : [];
+
+    // Sum planned budgets of all child categories
+    const childrenPlannedSum = children.reduce((sum, child) => {
+      const childBudget = monthBudgets.find((b) => b.categoryId === child.id);
+      return sum + (childBudget ? childBudget.plannedAmount : 0);
+    }, 0);
+
+    const planned = (parentBudget ? parentBudget.plannedAmount : 0) + childrenPlannedSum;
 
     let actual = 0;
     if (groupName === 'Saving') {

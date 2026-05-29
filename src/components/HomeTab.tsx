@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { PlusCircle, MinusCircle, ArrowRightLeft, TrendingUp, TrendingDown, ArrowRight, Wallet } from 'lucide-react';
+import { PlusCircle, MinusCircle, ArrowRightLeft, TrendingUp, TrendingDown, ArrowRight, Wallet, Eye, EyeOff } from 'lucide-react';
 import { formatIDR, formatDate, formatCurrency } from '../lib/finance/formatters';
 
 interface HomeTabProps {
@@ -23,6 +23,23 @@ export const HomeTab: React.FC<HomeTabProps> = ({ onOpenDrawer }) => {
     setActiveTab,
     globalMonth,
   } = useApp();
+
+  const [showAmounts, setShowAmounts] = React.useState<boolean>(true);
+
+  React.useEffect(() => {
+    const saved = localStorage.getItem('show_amounts');
+    if (saved === 'false') {
+      setShowAmounts(false);
+    }
+  }, []);
+
+  const toggleShowAmounts = () => {
+    setShowAmounts((prev) => {
+      const next = !prev;
+      localStorage.setItem('show_amounts', String(next));
+      return next;
+    });
+  };
 
   const currentMonth = globalMonth;
   const netWorth = getNetWorth();
@@ -45,9 +62,20 @@ export const HomeTab: React.FC<HomeTabProps> = ({ onOpenDrawer }) => {
         <div className="absolute left-0 top-0 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
 
         <div className="space-y-4">
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Net Worth</span>
-            <h1 className="text-3xl font-extrabold tracking-tight mt-1">{formatIDR(netWorth)}</h1>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Net Worth</span>
+              <h1 className="text-3xl font-extrabold tracking-tight mt-1">
+                {showAmounts ? formatIDR(netWorth) : '••••••'}
+              </h1>
+            </div>
+            <button
+              onClick={toggleShowAmounts}
+              className="text-slate-400 hover:text-white transition-colors p-2 rounded-xl bg-slate-800/40 hover:bg-slate-800/80 active:scale-95 transition-all flex items-center justify-center"
+              title={showAmounts ? "Hide amounts" : "Show amounts"}
+            >
+              {showAmounts ? <Eye size={16} /> : <EyeOff size={16} />}
+            </button>
           </div>
 
           <div className="h-px bg-slate-800" />
@@ -57,12 +85,14 @@ export const HomeTab: React.FC<HomeTabProps> = ({ onOpenDrawer }) => {
               <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
                 <Wallet size={10} /> Available Cash
               </span>
-              <p className="text-base font-bold text-[#6cf8bb] mt-0.5">{formatIDR(availableCash)}</p>
+              <p className="text-base font-bold text-[#6cf8bb] mt-0.5">
+                {showAmounts ? formatIDR(availableCash) : '••••••'}
+              </p>
             </div>
             <div className="text-right">
               <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Monthly Cashflow</span>
               <p className={`text-base font-bold mt-0.5 ${cashflow >= 0 ? 'text-[#6cf8bb]' : 'text-rose-400'}`}>
-                {cashflow >= 0 ? '+' : ''}{formatIDR(cashflow)}
+                {showAmounts ? `${cashflow >= 0 ? '+' : ''}${formatIDR(cashflow)}` : '••••••'}
               </p>
             </div>
           </div>
@@ -77,7 +107,9 @@ export const HomeTab: React.FC<HomeTabProps> = ({ onOpenDrawer }) => {
           </div>
           <div>
             <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">Income</span>
-            <span className="text-xs font-bold text-slate-800">{formatIDR(income)}</span>
+            <span className="text-xs font-bold text-slate-800">
+              {showAmounts ? formatIDR(income) : '••••••'}
+            </span>
           </div>
         </div>
 
@@ -87,7 +119,9 @@ export const HomeTab: React.FC<HomeTabProps> = ({ onOpenDrawer }) => {
           </div>
           <div>
             <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">Expense</span>
-            <span className="text-xs font-bold text-slate-800">{formatIDR(expense)}</span>
+            <span className="text-xs font-bold text-slate-800">
+              {showAmounts ? formatIDR(expense) : '••••••'}
+            </span>
           </div>
         </div>
       </div>
@@ -127,7 +161,9 @@ export const HomeTab: React.FC<HomeTabProps> = ({ onOpenDrawer }) => {
             <h3 className="text-sm font-extrabold text-[#0b1c30]">Remaining Budget</h3>
             <span className="text-[10px] text-slate-400">{currentMonth} Monthly Limit</span>
           </div>
-          <span className="text-sm font-extrabold text-primary">{formatIDR(budget.totalRemaining)}</span>
+          <span className="text-sm font-extrabold text-primary">
+            {showAmounts ? formatIDR(budget.totalRemaining) : '••••••'}
+          </span>
         </div>
 
         {/* Dynamic group indicators */}
@@ -142,8 +178,12 @@ export const HomeTab: React.FC<HomeTabProps> = ({ onOpenDrawer }) => {
                 <div className="flex justify-between text-xs">
                   <span className="font-semibold text-slate-700">{group.name}</span>
                   <div className="space-x-1">
-                    <span className="font-bold text-[#0b1c30]">{formatIDR(group.used)}</span>
-                    <span className="text-slate-400">/ {formatIDR(group.planned)}</span>
+                    <span className="font-bold text-[#0b1c30]">
+                      {showAmounts ? formatIDR(group.used) : '••••••'}
+                    </span>
+                    <span className="text-slate-400">
+                      / {showAmounts ? formatIDR(group.planned) : '••••••'}
+                    </span>
                   </div>
                 </div>
                 <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -209,7 +249,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ onOpenDrawer }) => {
                 <div className="text-right">
                   <span className={`text-xs font-bold ${valColor}`}>
                     {sign}
-                    {formatCurrency(t.amount, t.currency)}
+                    {showAmounts ? formatCurrency(t.amount, t.currency) : '••••••'}
                   </span>
                   <p className="text-[9px] text-slate-400 mt-0.5">{formatDate(t.date)}</p>
                 </div>
