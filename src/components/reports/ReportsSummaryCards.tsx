@@ -2,6 +2,7 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, Wallet, ArrowUpDown, PiggyBank, DollarSign } from 'lucide-react';
 import { formatIDR, formatCompactCurrency } from '../../lib/finance/formatters';
+import { useApp } from '../../context/AppContext';
 
 interface SummaryCardProps {
   label: string;
@@ -12,6 +13,7 @@ interface SummaryCardProps {
 }
 
 const SummaryCard: React.FC<SummaryCardProps> = ({ label, value, icon, accent, isNegativeGood }) => {
+  const { showAmounts } = useApp();
   const isNegative = value < 0;
   const textColor = isNegative
     ? isNegativeGood ? 'text-emerald-600' : 'text-rose-600'
@@ -25,8 +27,8 @@ const SummaryCard: React.FC<SummaryCardProps> = ({ label, value, icon, accent, i
       <div className="min-w-0">
         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">{label}</span>
         <span className={`text-sm font-black leading-tight block truncate ${textColor}`}>
-          {formatCompactCurrency(Math.abs(value), 'IDR')}
-          {isNegative && <span className="text-[10px] ml-0.5 font-semibold opacity-70">(neg)</span>}
+          {showAmounts ? formatCompactCurrency(Math.abs(value), 'IDR') : '••••••'}
+          {isNegative && showAmounts && <span className="text-[10px] ml-0.5 font-semibold opacity-70">(neg)</span>}
         </span>
       </div>
     </div>

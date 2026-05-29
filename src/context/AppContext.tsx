@@ -125,6 +125,8 @@ interface AppContextType {
     feeAmount?: number,
     feeCategoryId?: string
   ) => Promise<void>;
+  showAmounts: boolean;
+  toggleShowAmounts: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -133,6 +135,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
   const { showSuccess, showError } = useToast();
   const [activeTab, setActiveTab] = useState<'home' | 'transactions' | 'budget' | 'accounts' | 'reports'>('home');
   const [globalMonth, setGlobalMonth] = useState('2026-05');
+
+  const [showAmounts, setShowAmounts] = useState<boolean>(true);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('show_amounts');
+      if (saved === 'false') {
+        setShowAmounts(false);
+      }
+    }
+  }, []);
+
+  const toggleShowAmounts = () => {
+    setShowAmounts((prev) => {
+      const next = !prev;
+      localStorage.setItem('show_amounts', String(next));
+      return next;
+    });
+  };
   
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -891,6 +912,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode; userId?: string 
         addAssetBuyTransaction,
         addAssetSellTransaction,
         addAssetValueUpdateTransaction,
+        showAmounts,
+        toggleShowAmounts,
       }}
     >
       {children}

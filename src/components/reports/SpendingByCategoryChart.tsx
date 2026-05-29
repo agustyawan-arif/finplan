@@ -4,6 +4,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatCompactCurrency, formatIDR } from '../../lib/finance/formatters';
 import { SpendingByCategoryItem } from '../../lib/finance/reportData';
 import { ReportEmptyState } from './ReportEmptyState';
+import { useApp } from '../../context/AppContext';
 
 const COLORS = [
   '#0f172a', '#10b981', '#6366f1', '#f43f5e',
@@ -16,6 +17,7 @@ interface SpendingByCategoryChartProps {
 }
 
 export const SpendingByCategoryChart: React.FC<SpendingByCategoryChartProps> = ({ data, total }) => {
+  const { showAmounts } = useApp();
   if (data.length === 0) return <ReportEmptyState message="No expense transactions this month." />;
 
   return (
@@ -40,7 +42,7 @@ export const SpendingByCategoryChart: React.FC<SpendingByCategoryChartProps> = (
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value: any) => [formatCompactCurrency(Number(value ?? 0), 'IDR'), '']}
+                formatter={(value: any) => [showAmounts ? formatCompactCurrency(Number(value ?? 0), 'IDR') : '••••••', '']}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -48,7 +50,7 @@ export const SpendingByCategoryChart: React.FC<SpendingByCategoryChartProps> = (
 
         <div className="flex-1 min-w-0">
           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Total Spent</p>
-          <p className="text-base font-black text-[#0b1c30] leading-tight">{formatIDR(total)}</p>
+          <p className="text-base font-black text-[#0b1c30] leading-tight">{showAmounts ? formatIDR(total) : '••••••'}</p>
         </div>
       </div>
 
@@ -64,7 +66,7 @@ export const SpendingByCategoryChart: React.FC<SpendingByCategoryChartProps> = (
               />
               <span className="font-semibold text-slate-600 flex-1 truncate">{item.name}</span>
               <span className="font-bold text-[#0b1c30] shrink-0">
-                {formatCompactCurrency(item.value, 'IDR')}
+                {showAmounts ? formatCompactCurrency(item.value, 'IDR') : '••••••'}
               </span>
               <span className="text-slate-400 font-semibold w-9 text-right shrink-0">
                 {pct.toFixed(0)}%

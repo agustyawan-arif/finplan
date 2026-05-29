@@ -13,19 +13,20 @@ import {
 import { formatCompactCurrency } from '../../lib/finance/formatters';
 import { BudgetVsActualItem } from '../../lib/finance/reportData';
 import { ReportEmptyState } from './ReportEmptyState';
+import { useApp } from '../../context/AppContext';
 
 interface BudgetVsActualChartProps {
   data: BudgetVsActualItem[];
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label, showAmounts }: any) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-white border border-slate-100 rounded-xl px-3 py-2 shadow-lg text-[10px]">
       <p className="font-extrabold text-slate-800 mb-1">{label}</p>
       {payload.map((p: any) => (
         <p key={p.name} style={{ color: p.fill }} className="font-semibold">
-          {p.name}: {formatCompactCurrency(p.value ?? 0, 'IDR')}
+          {p.name}: {showAmounts ? formatCompactCurrency(p.value ?? 0, 'IDR') : '••••••'}
         </p>
       ))}
     </div>
@@ -33,6 +34,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export const BudgetVsActualChart: React.FC<BudgetVsActualChartProps> = ({ data }) => {
+  const { showAmounts } = useApp();
   const hasData = data.some((d) => d.planned > 0 || d.actual > 0);
   if (!hasData) return <ReportEmptyState message="No budget data for this month." />;
 
@@ -53,9 +55,9 @@ export const BudgetVsActualChart: React.FC<BudgetVsActualChartProps> = ({ data }
               tick={{ fontSize: 9 }}
               axisLine={false}
               tickLine={false}
-              tickFormatter={(v) => formatCompactCurrency(v, 'IDR')}
+              tickFormatter={(v) => showAmounts ? formatCompactCurrency(v, 'IDR') : '••'}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomTooltip showAmounts={showAmounts} />} />
             <Bar dataKey="planned" name="Planned" fill="#e2e8f0" radius={[4, 4, 0, 0]} />
             <Bar dataKey="actual" name="Actual" radius={[4, 4, 0, 0]}>
               {data.map((entry, i) => (
@@ -90,7 +92,7 @@ export const BudgetVsActualChart: React.FC<BudgetVsActualChartProps> = ({ data }
           <span className="text-rose-500 font-extrabold">⚠</span>
           <span className="text-rose-700 font-semibold">
             {d.name} exceeded by{' '}
-            <strong>{formatCompactCurrency(d.actual - d.planned, 'IDR')}</strong>
+            <strong>{showAmounts ? formatCompactCurrency(d.actual - d.planned, 'IDR') : '••••••'}</strong>
           </span>
         </div>
       ))}

@@ -22,24 +22,9 @@ export const HomeTab: React.FC<HomeTabProps> = ({ onOpenDrawer }) => {
     getAccountName,
     setActiveTab,
     globalMonth,
+    showAmounts,
+    toggleShowAmounts,
   } = useApp();
-
-  const [showAmounts, setShowAmounts] = React.useState<boolean>(true);
-
-  React.useEffect(() => {
-    const saved = localStorage.getItem('show_amounts');
-    if (saved === 'false') {
-      setShowAmounts(false);
-    }
-  }, []);
-
-  const toggleShowAmounts = () => {
-    setShowAmounts((prev) => {
-      const next = !prev;
-      localStorage.setItem('show_amounts', String(next));
-      return next;
-    });
-  };
 
   const currentMonth = globalMonth;
   const netWorth = getNetWorth();

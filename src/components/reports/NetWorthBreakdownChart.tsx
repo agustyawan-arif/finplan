@@ -4,6 +4,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatCompactCurrency, formatIDR } from '../../lib/finance/formatters';
 import { NetWorthBreakdownItem } from '../../lib/finance/reportData';
 import { ReportEmptyState } from './ReportEmptyState';
+import { useApp } from '../../context/AppContext';
 
 const COLORS = [
   '#0f172a', '#10b981', '#6366f1', '#f43f5e',
@@ -17,6 +18,7 @@ interface NetWorthBreakdownChartProps {
 }
 
 export const NetWorthBreakdownChart: React.FC<NetWorthBreakdownChartProps> = ({ data, total }) => {
+  const { showAmounts } = useApp();
   if (data.length === 0) return <ReportEmptyState message="No accounts or holdings found." />;
 
   return (
@@ -41,7 +43,7 @@ export const NetWorthBreakdownChart: React.FC<NetWorthBreakdownChartProps> = ({ 
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value: any) => [formatCompactCurrency(Number(value ?? 0), 'IDR'), '']}
+                formatter={(value: any) => [showAmounts ? formatCompactCurrency(Number(value ?? 0), 'IDR') : '••••••', '']}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -49,7 +51,7 @@ export const NetWorthBreakdownChart: React.FC<NetWorthBreakdownChartProps> = ({ 
 
         <div className="flex-1 min-w-0">
           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Total Net Worth</p>
-          <p className="text-base font-black text-[#0b1c30] leading-tight">{formatIDR(total)}</p>
+          <p className="text-base font-black text-[#0b1c30] leading-tight">{showAmounts ? formatIDR(total) : '••••••'}</p>
         </div>
       </div>
 
@@ -84,7 +86,7 @@ export const NetWorthBreakdownChart: React.FC<NetWorthBreakdownChartProps> = ({ 
                 </div>
               </div>
               <span className="font-bold text-[#0b1c30] shrink-0">
-                {formatCompactCurrency(item.value, 'IDR')}
+                {showAmounts ? formatCompactCurrency(item.value, 'IDR') : '••••••'}
               </span>
               <span className="text-slate-400 font-semibold w-8 text-right shrink-0">
                 {pct.toFixed(0)}%

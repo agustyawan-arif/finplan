@@ -3,6 +3,7 @@ import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatCompactCurrency } from '../../lib/finance/formatters';
 import { ReportEmptyState } from './ReportEmptyState';
+import { useApp } from '../../context/AppContext';
 
 const COLORS: Record<string, string> = {
   'Cash': '#f59e0b',
@@ -20,6 +21,7 @@ interface AssetAllocationChartProps {
 }
 
 export const AssetAllocationChart: React.FC<AssetAllocationChartProps> = ({ data, total }) => {
+  const { showAmounts } = useApp();
   if (data.length === 0) return <ReportEmptyState message="No asset data available." />;
 
   let defaultIdx = 0;
@@ -46,7 +48,7 @@ export const AssetAllocationChart: React.FC<AssetAllocationChartProps> = ({ data
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value: any) => [formatCompactCurrency(Number(value ?? 0), 'IDR'), '']}
+                formatter={(value: any) => [showAmounts ? formatCompactCurrency(Number(value ?? 0), 'IDR') : '••••••', '']}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -55,7 +57,7 @@ export const AssetAllocationChart: React.FC<AssetAllocationChartProps> = ({ data
         <div className="flex-1 min-w-0">
           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Total Assets</p>
           <p className="text-base font-black text-[#0b1c30] leading-tight">
-            {formatCompactCurrency(total, 'IDR')}
+            {showAmounts ? formatCompactCurrency(total, 'IDR') : '••••••'}
           </p>
         </div>
       </div>
@@ -69,7 +71,7 @@ export const AssetAllocationChart: React.FC<AssetAllocationChartProps> = ({ data
               <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
               <span className="font-semibold text-slate-600 flex-1 truncate">{item.name}</span>
               <span className="font-bold text-[#0b1c30] shrink-0">
-                {formatCompactCurrency(item.value, 'IDR')}
+                {showAmounts ? formatCompactCurrency(item.value, 'IDR') : '••••••'}
               </span>
               <span className="text-slate-400 font-semibold w-8 text-right shrink-0">
                 {pct.toFixed(0)}%

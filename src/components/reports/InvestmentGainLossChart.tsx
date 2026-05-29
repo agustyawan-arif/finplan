@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { formatCompactCurrency, formatIDR, formatPercentage } from '../../lib/finance/formatters';
 import { InvestmentGainLossItem } from '../../lib/finance/reportData';
 import { ReportEmptyState } from './ReportEmptyState';
+import { useApp } from '../../context/AppContext';
 
 interface InvestmentGainLossChartProps {
   data: InvestmentGainLossItem[];
@@ -33,6 +34,7 @@ const GainBadge: React.FC<{ value: number; pct: number; isPositive: boolean }> =
 };
 
 export const InvestmentGainLossChart: React.FC<InvestmentGainLossChartProps> = ({ data }) => {
+  const { showAmounts } = useApp();
   if (data.length === 0) return <ReportEmptyState message="No investment or deposit holdings found." />;
 
   const totalGain = data.reduce((sum, d) => sum + d.gainLossConverted, 0);
@@ -49,7 +51,7 @@ export const InvestmentGainLossChart: React.FC<InvestmentGainLossChartProps> = (
           Total Unrealized P&L
         </span>
         <span className={`font-black ${isOverallPositive ? 'text-emerald-700' : 'text-rose-700'}`}>
-          {isOverallPositive ? '+' : ''}{formatIDR(totalGain)}
+          {showAmounts ? `${isOverallPositive ? '+' : ''}${formatIDR(totalGain)}` : '••••••'}
         </span>
       </div>
 
@@ -82,11 +84,11 @@ export const InvestmentGainLossChart: React.FC<InvestmentGainLossChartProps> = (
             <div className="grid grid-cols-3 gap-1 text-[9px]">
               <div>
                 <p className="text-slate-400 font-semibold uppercase tracking-wider text-[8px]">Cost</p>
-                <p className="font-bold text-slate-700">{formatCompactCurrency(item.principal, 'IDR')}</p>
+                <p className="font-bold text-slate-700">{showAmounts ? formatCompactCurrency(item.principal, 'IDR') : '••••••'}</p>
               </div>
               <div>
                 <p className="text-slate-400 font-semibold uppercase tracking-wider text-[8px]">Value</p>
-                <p className="font-bold text-slate-700">{formatCompactCurrency(item.currentValue, 'IDR')}</p>
+                <p className="font-bold text-slate-700">{showAmounts ? formatCompactCurrency(item.currentValue, 'IDR') : '••••••'}</p>
               </div>
               <div>
                 <p className="text-slate-400 font-semibold uppercase tracking-wider text-[8px]">Gain/Loss</p>
@@ -100,7 +102,7 @@ export const InvestmentGainLossChart: React.FC<InvestmentGainLossChartProps> = (
                   }`}
                 >
                   {item.gainLoss === 0 ? '—' : (item.isPositive ? '+' : '')}
-                  {formatCompactCurrency(Math.abs(item.gainLossConverted), 'IDR')}
+                  {showAmounts ? formatCompactCurrency(Math.abs(item.gainLossConverted), 'IDR') : '••••••'}
                 </p>
               </div>
             </div>

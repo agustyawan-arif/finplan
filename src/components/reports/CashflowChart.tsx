@@ -4,24 +4,26 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import { formatCompactCurrency, formatIDR } from '../../lib/finance/formatters';
 import { CashflowReportData } from '../../lib/finance/reportData';
 import { ReportEmptyState } from './ReportEmptyState';
+import { useApp } from '../../context/AppContext';
 
 interface CashflowChartProps {
   data: CashflowReportData;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label, showAmounts }: any) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-white border border-slate-100 rounded-xl px-3 py-2 shadow-lg text-[10px]">
       <p className="font-extrabold text-slate-800 mb-1">{label}</p>
       <p style={{ color: payload[0]?.fill }} className="font-semibold">
-        {formatCompactCurrency(Math.abs(payload[0]?.value ?? 0), 'IDR')}
+        {showAmounts ? formatCompactCurrency(Math.abs(payload[0]?.value ?? 0), 'IDR') : '••••••'}
       </p>
     </div>
   );
 };
 
 export const CashflowChart: React.FC<CashflowChartProps> = ({ data }) => {
+  const { showAmounts } = useApp();
   if (data.income === 0 && data.expense === 0) {
     return <ReportEmptyState message="No income or expense transactions this month." />;
   }
@@ -46,9 +48,9 @@ export const CashflowChart: React.FC<CashflowChartProps> = ({ data }) => {
               tick={{ fontSize: 9 }}
               axisLine={false}
               tickLine={false}
-              tickFormatter={(v) => formatCompactCurrency(Math.abs(v), 'IDR')}
+              tickFormatter={(v) => showAmounts ? formatCompactCurrency(Math.abs(v), 'IDR') : '••'}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomTooltip showAmounts={showAmounts} />} />
             <Bar dataKey="value" radius={[6, 6, 0, 0]}>
               {data.bars.map((entry, i) => (
                 <Cell key={i} fill={entry.fill} />
@@ -62,18 +64,18 @@ export const CashflowChart: React.FC<CashflowChartProps> = ({ data }) => {
       <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
         <div className="bg-emerald-50 rounded-xl py-2">
           <p className="text-[8px] font-bold text-emerald-500 uppercase tracking-wider">Income</p>
-          <p className="font-black text-emerald-700">{formatCompactCurrency(data.income, 'IDR')}</p>
+          <p className="font-black text-emerald-700">{showAmounts ? formatCompactCurrency(data.income, 'IDR') : '••••••'}</p>
         </div>
         <div className="bg-rose-50 rounded-xl py-2">
           <p className="text-[8px] font-bold text-rose-500 uppercase tracking-wider">Expenses</p>
-          <p className="font-black text-rose-700">{formatCompactCurrency(data.expense, 'IDR')}</p>
+          <p className="font-black text-rose-700">{showAmounts ? formatCompactCurrency(data.expense, 'IDR') : '••••••'}</p>
         </div>
         <div className={`${isNetPositive ? 'bg-indigo-50' : 'bg-amber-50'} rounded-xl py-2`}>
           <p className={`text-[8px] font-bold ${isNetPositive ? 'text-indigo-500' : 'text-amber-500'} uppercase tracking-wider`}>
             Net
           </p>
           <p className={`font-black ${isNetPositive ? 'text-indigo-700' : 'text-amber-700'}`}>
-            {data.net < 0 ? '-' : '+'}{formatCompactCurrency(Math.abs(data.net), 'IDR')}
+            {showAmounts ? `${data.net < 0 ? '-' : '+'}${formatCompactCurrency(Math.abs(data.net), 'IDR')}` : '••••••'}
           </p>
         </div>
       </div>

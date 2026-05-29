@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye, EyeOff } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { formatMonth } from '../lib/finance/formatters';
 import {
@@ -50,6 +50,8 @@ export const ReportsTab: React.FC = () => {
     getMonthlyExpense,
     getMonthlyCashflow,
     globalMonth,
+    showAmounts,
+    toggleShowAmounts,
   } = useApp();
 
   const [mounted, setMounted] = useState(false);
@@ -120,6 +122,21 @@ export const ReportsTab: React.FC = () => {
 
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar pb-24 px-4 pt-4 space-y-5">
+
+      {/* Reports Header */}
+      <div className="flex items-center justify-between px-1">
+        <div>
+          <h2 className="text-lg font-black text-[#0b1c30]">Analysis & Reports</h2>
+          <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block">Financial Performance</span>
+        </div>
+        <button
+          onClick={toggleShowAmounts}
+          className="text-slate-400 hover:text-[#0b1c30] transition-colors p-2 rounded-xl bg-white border border-slate-100 hover:bg-slate-50 active:scale-95 transition-all flex items-center justify-center shrink-0 shadow-ambient"
+          title={showAmounts ? "Hide amounts" : "Show amounts"}
+        >
+          {showAmounts ? <Eye size={15} className="text-slate-600" /> : <EyeOff size={15} className="text-slate-600" />}
+        </button>
+      </div>
 
       {/* Summary Cards */}
       <ReportsSummaryCards
